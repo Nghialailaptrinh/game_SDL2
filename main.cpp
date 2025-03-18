@@ -655,7 +655,7 @@ bool DataStream::loadMedia()
 		{
 
             mImages[i] = SDL_ConvertSurfaceFormat(loadedSurface, SDL_PIXELFORMAT_RGBA8888, 0);
-            SetColor(mImages[i],255,0,255,255, 255,255,0,255); //khóa màu nền
+            SetColor(mImages[i],255,255,255,255); //khóa màu nền
             // ta cần bật chế độ blen mode của texture sau đó
 
 
@@ -1191,7 +1191,7 @@ int main( int argc, char* args[] )
 
 
 //				//Render frame
-				gStreamingTexture.render( dot.GetX(), dot.GetY());
+				gStreamingTexture.render( dot.GetX(), dot.GetY()-54);
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
