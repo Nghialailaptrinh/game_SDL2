@@ -182,6 +182,11 @@ class Dot
 		//Shows the dot on the screen
 		void render( SDL_Rect& camera );
 
+		// Get x,y
+		int GetX(){return mBox.x;}
+		int GetY(){return mBox.y;}
+
+
     private:
 		//Collision box of the dot
 		SDL_Rect mBox;
@@ -865,6 +870,18 @@ bool loadMedia( Tile* tiles[] )
 		printf( "Failed to load tile set!\n" );
 		success = false;
 	}
+	if( !gStreamingTexture.createBlank( 64, 205 ) )
+	{
+		printf( "Failed to create streaming texture!\n" );
+		success = false;
+	}
+
+	//Load data stream
+	if( !gDataStream.loadMedia() )
+	{
+		printf( "Unable to load data stream!\n" );
+		success = false;
+	}
 
 	return success;
 }
@@ -884,6 +901,10 @@ void close( Tile* tiles[] )
 	//Free loaded images
 	gDotTexture.free();
 	gTileTexture.free();
+
+	//
+	gStreamingTexture.free();
+	gDataStream.free();
 
 	//Destroy window
 	SDL_DestroyRenderer( gRenderer );
@@ -1150,6 +1171,7 @@ int main( int argc, char* args[] )
 				dot.setCamera( camera );
 
 				//Clear screen
+				gStreamingTexture.setBlendMode(SDL_BLENDMODE_BLEND);
 				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
 				SDL_RenderClear( gRenderer );
 
@@ -1159,8 +1181,17 @@ int main( int argc, char* args[] )
 					tileSet[ i ]->render( camera );
 				}
 
-				//Render dot
-				dot.render( camera );
+//				//Render dot
+//				dot.render( camera );
+
+				//Copy frame from buffer
+				gStreamingTexture.lockTexture();
+				gStreamingTexture.copyRawPixels32( gDataStream.getBuffer() );
+				gStreamingTexture.unlockTexture();
+
+
+//				//Render frame
+				gStreamingTexture.render( dot.GetX(), dot.GetY());
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
