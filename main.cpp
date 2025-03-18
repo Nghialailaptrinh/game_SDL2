@@ -870,7 +870,7 @@ bool loadMedia( Tile* tiles[] )
 		printf( "Failed to load tile set!\n" );
 		success = false;
 	}
-	if( !gStreamingTexture.createBlank( 64, 205 ) )
+	if( !gStreamingTexture.createBlank( 20, 64 ) )
 	{
 		printf( "Failed to create streaming texture!\n" );
 		success = false;
