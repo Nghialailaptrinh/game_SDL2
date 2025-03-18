@@ -1191,7 +1191,7 @@ int main( int argc, char* args[] )
 
 
 //				//Render frame
-				gStreamingTexture.render( dot.GetX(), dot.GetY()-54);
+				gStreamingTexture.render( dot.GetX()-camera.x, dot.GetY()-54-camera.y);
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
