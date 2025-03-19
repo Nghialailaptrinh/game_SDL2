@@ -1336,17 +1336,17 @@ int main( int argc, char* args[] )
 					tileSet[ i ]->render( camera );
 				}
 
-//				//Render dot
-//				dot.render( camera );
+				//Render dot
+				dot.render( camera );
 
-				//Copy frame from buffer
-				gStreamingTexture.lockTexture();
-				gStreamingTexture.copyRawPixels32( gDataStream.getBuffer() );
-				gStreamingTexture.unlockTexture();
-
-
-//				//Render frame
-				gStreamingTexture.render( dot.GetX()-camera.x, dot.GetY()-54-camera.y);
+//				//Copy frame from buffer
+//				gStreamingTexture.lockTexture();
+//				gStreamingTexture.copyRawPixels32( gDataStream.getBuffer() );
+//				gStreamingTexture.unlockTexture();
+//
+//
+////				//Render frame
+//				gStreamingTexture.render( dot.GetX()-camera.x, dot.GetY()-54-camera.y);
 
 				//Update screen
 				SDL_RenderPresent( gRenderer );
