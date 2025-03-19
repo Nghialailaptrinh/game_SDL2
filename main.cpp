@@ -1311,8 +1311,12 @@ int main( int argc, char* args[] )
 					dot.handleEvent( e );
 				}
 
+
+				//Calculate time step
+				float timeStep = stepTimer.getTicks() / 1000.f;
+
 				//Move the dot
-				dot.move( tileSet,1 );
+				dot.move( tileSet,timeStep );
 				dot.setCamera( camera );
 
 				//Clear screen
