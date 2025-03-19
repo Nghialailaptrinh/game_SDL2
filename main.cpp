@@ -1292,6 +1292,9 @@ int main( int argc, char* args[] )
 			//The dot that will be moving around on the screen
 			Dot dot;
 
+			//Keeps track of time between steps
+			LTimer stepTimer;
+
 			//Level camera
 			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
@@ -1318,6 +1321,9 @@ int main( int argc, char* args[] )
 				//Move the dot
 				dot.move( tileSet,timeStep );
 				dot.setCamera( camera );
+
+				//Restart step timer
+				stepTimer.start();
 
 				//Clear screen
 				gStreamingTexture.setBlendMode(SDL_BLENDMODE_BLEND);
