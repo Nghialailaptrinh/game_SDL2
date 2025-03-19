@@ -7,6 +7,7 @@
  #include <string>
  #include <fstream>
  #include <sstream>
+ #include <iomanip>
 
  //Screen dimension constants
  const int SCREEN_WIDTH = 640;
@@ -107,6 +108,8 @@
  	//Image dimensions
  	int mWidth;
  	int mHeight;
+
+
  };
 
 
@@ -138,10 +141,10 @@
  {
  	public:
  		//Initializes internals
- 		DataStream();
+ 		DataStream(int Frame);
 
  		//Loads initial data
- 		bool loadMedia();
+ 		bool loadMedia(std::string path1);
 
  		//Deallocator
  		void free();
@@ -151,9 +154,10 @@
 
  	private:
  		//Internal data
- 		SDL_Surface* mImages[ 4 ];
+ 		SDL_Surface* mImages[24];
  		int mCurrentImage;
  		int mDelayFrames;
+ 		int mFrame;
  };
 
  //The application time based timer
@@ -197,7 +201,7 @@
  		static const int DOT_HEIGHT = 20;
 
  		//Maximum axis velocity of the dot
- 		static const int DOT_VEL = 10;
+ 		static const int DOT_VEL = 5;
 
  		//Initializes the variables
  		Dot();
@@ -218,13 +222,20 @@
  		int GetX(){return mBox.x;}
  		int GetY(){return mBox.y;}
 
+        // check direction
+        isRight(){return goRight;}
 
+        isWalk (){return walk;}
      private:
  		//Collision box of the dot
  		SDL_Rect mBox;
 
  		//The velocity of the dot
  		int mVelX, mVelY;
+
+ 		bool walk;
+ 		bool goRight;
+ 	    bool goLeft;
  };
 
  //Starts up SDL and creates window
@@ -252,10 +263,11 @@
  SDL_Renderer* gRenderer = NULL;
 
  //Scene textures
- LTexture gStreamingTexture;
-
+ LTexture gStreamingGo;
+ LTexture gStreamingStand;
  //Animation stream
- DataStream gDataStream;
+ DataStream gDataStreamGo(24);
+ DataStream gDataStreamStand(18);
 
  //Scene textures
  LTexture gDotTexture;
@@ -624,15 +636,35 @@
      return mBox;
  }
  /////////////
- DataStream::DataStream()
- {
+ DataStream::DataStream( int Frame)
+ {  mFrame=Frame;
  	mImages[ 0 ] = NULL;
  	mImages[ 1 ] = NULL;
  	mImages[ 2 ] = NULL;
  	mImages[ 3 ] = NULL;
+ 	mImages[ 4 ] = NULL;
+ 	mImages[ 5 ] = NULL;
+ 	mImages[ 6 ] = NULL;
+ 	mImages[ 7 ] = NULL;
+ 	mImages[ 8 ] = NULL;
+ 	mImages[ 9 ] = NULL;
+ 	mImages[ 10 ] = NULL;
+ 	mImages[ 11] = NULL;
+ 	mImages[ 12 ] = NULL;
+ 	mImages[ 13 ] = NULL;
+ 	mImages[ 14 ] = NULL;
+ 	mImages[ 15 ] = NULL;
+ 	mImages[ 16 ] = NULL;
+ 	mImages[ 17 ] = NULL;
+ 	mImages[ 18 ] = NULL;
+ 	mImages[ 19 ] = NULL;
+ 	mImages[ 20 ] = NULL;
+ 	mImages[ 21 ] = NULL;
+ 	mImages[ 22 ] = NULL;
+ 	mImages[ 23 ] = NULL;
 
  	mCurrentImage = 0;
- 	mDelayFrames = 4;
+ 	mDelayFrames = 1;
  }
 
 
@@ -669,14 +701,14 @@
                              }
                          }
                      }
- bool DataStream::loadMedia()
+ bool DataStream::loadMedia( std:: string path1)
  {
  	bool success = true;
 
- 	for( int i = 0; i < 4; ++i )
+ 	for( int i = 0; i < mFrame; ++i )
  	{
  		std::stringstream path;
- 		path << "image/foo_walk_" << i << ".png";
+        path << path1 << std::setw(2) << std::setfill('0') << i << ".png";
 
  		SDL_Surface* loadedSurface = IMG_Load( path.str().c_str() );
  		if( loadedSurface == NULL )
@@ -705,7 +737,7 @@
 
  void DataStream::free()
  {
- 	for( int i = 0; i < 4; ++i )
+ 	for( int i = 0; i < mFrame; ++i )
  	{
  		SDL_FreeSurface( mImages[ i ] );
  		mImages[ i ] = NULL;
@@ -718,10 +750,10 @@
  	if( mDelayFrames == 0 )
  	{
  		++mCurrentImage;
- 		mDelayFrames = 4;
+ 		mDelayFrames = 1;
  	}
 
- 	if( mCurrentImage == 4 )
+ 	if( mCurrentImage == mFrame )
  	{
  		mCurrentImage = 0;
  	}
@@ -838,14 +870,17 @@
  Dot::Dot()
  {
      //Initialize the collision box
-     mBox.x = 0;
-     mBox.y = 0;
+     mBox.x = 50;
+     mBox.y = 50;
  	mBox.w = DOT_WIDTH;
  	mBox.h = DOT_HEIGHT;
 
      //Initialize the velocity
      mVelX = 0;
      mVelY = 0;
+    walk=0;
+    goRight = 1;
+ 	goLeft = 0;
  }
 
  void Dot::handleEvent( SDL_Event& e )
@@ -858,8 +893,8 @@
          {
              case SDLK_UP: mVelY -= DOT_VEL; break;
              case SDLK_DOWN: mVelY += DOT_VEL; break;
-             case SDLK_LEFT: mVelX -= DOT_VEL; break;
-             case SDLK_RIGHT: mVelX += DOT_VEL; break;
+             case SDLK_LEFT: mVelX -= DOT_VEL; goRight = 0; goLeft = 1; break;
+             case SDLK_RIGHT: mVelX += DOT_VEL; goRight = 1;goLeft = 0; break;
          }
      }
      //If a key was released
@@ -874,6 +909,9 @@
              case SDLK_RIGHT: mVelX -= DOT_VEL; break;
          }
      }
+
+     if(mVelX!=0 || mVelY!=0){walk=1;}
+     else walk =0;
  }
 
 
@@ -1012,14 +1050,24 @@
  		printf( "Failed to load tile set!\n" );
  		success = false;
  	}
- 	if( !gStreamingTexture.createBlank( 20, 64 ) )
+ 	if( !gStreamingGo.createBlank( 80, 80 ) )
  	{
- 		printf( "Failed to create streaming texture!\n" );
+ 		printf( "Failed to create streamingGo texture!\n" );
+ 		success = false;
+ 	}
+ 	if( !gStreamingStand.createBlank( 80, 80 ) )
+ 	{
+ 		printf( "Failed to create streamingStand texture!\n" );
  		success = false;
  	}
 
  	//Load data stream
- 	if( !gDataStream.loadMedia() )
+ 	if( !gDataStreamGo.loadMedia("image/character/Walking/0_Valkyrie_Walking_0") )
+ 	{
+ 		printf( "Unable to load data stream!\n" );
+ 		success = false;
+ 	}
+ 	if( !gDataStreamStand.loadMedia("image/character/Idle/0_Valkyrie_Idle_0") )
  	{
  		printf( "Unable to load data stream!\n" );
  		success = false;
@@ -1045,8 +1093,8 @@
  	gTileTexture.free();
 
  	//
- 	gStreamingTexture.free();
- 	gDataStream.free();
+ 	gStreamingGo.free();
+ 	gDataStreamGo.free();
 
  	//Destroy window
  	SDL_DestroyRenderer( gRenderer );
@@ -1314,7 +1362,8 @@
  				dot.setCamera( camera );
 
  				//Clear screen
- 				gStreamingTexture.setBlendMode(SDL_BLENDMODE_BLEND);
+ 				gStreamingGo.setBlendMode(SDL_BLENDMODE_BLEND);
+ 				gStreamingStand.setBlendMode(SDL_BLENDMODE_BLEND);
  				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
  				SDL_RenderClear( gRenderer );
 
@@ -1328,15 +1377,25 @@
  //				dot.render( camera );
 
  				//Copy frame from buffer
- 				gStreamingTexture.lockTexture();
- 				gStreamingTexture.copyRawPixels32( gDataStream.getBuffer() );
- 				gStreamingTexture.unlockTexture();
-
-
+ 				if(dot.isWalk()){
+ 				gStreamingGo.lockTexture();
+ 				gStreamingGo.copyRawPixels32( gDataStreamGo.getBuffer() );
+ 				gStreamingGo.unlockTexture();
  //				//Render frame
- 				gStreamingTexture.render( dot.GetX()-camera.x, dot.GetY()-54-camera.y);
 
- 				//Update screen
+ 				gStreamingGo.render( dot.GetX()  + dot.DOT_WIDTH/2 -gStreamingGo.getWidth()/2 -camera.x , dot.GetY() + dot.DOT_HEIGHT-gStreamingGo.getHeight()+10 -camera.y,nullptr,0,NULL,((!dot.isRight())?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE));
+ 				}
+
+ 				else{
+                gStreamingStand.lockTexture();
+ 				gStreamingStand.copyRawPixels32( gDataStreamStand.getBuffer() );
+ 				gStreamingStand.unlockTexture();
+ //				//Render frame
+
+ 				gStreamingStand.render( dot.GetX()  + dot.DOT_WIDTH/2 -gStreamingStand.getWidth()/2 -camera.x , dot.GetY() + dot.DOT_HEIGHT-gStreamingStand.getHeight()+10 -camera.y,nullptr,0,NULL,((!dot.isRight())?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE));
+
+ 				}
+ 				//Update scree
  				SDL_RenderPresent( gRenderer );
  			}
  		}
