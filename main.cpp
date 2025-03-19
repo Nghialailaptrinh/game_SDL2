@@ -156,6 +156,38 @@ class DataStream
 		int mDelayFrames;
 };
 
+//The application time based timer
+class LTimer
+{
+    public:
+		//Initializes variables
+		LTimer();
+
+		//The various clock actions
+		void start();
+		void stop();
+		void pause();
+		void unpause();
+
+		//Gets the timer's time
+		Uint32 getTicks();
+
+		//Checks the status of the timer
+		bool isStarted();
+		bool isPaused();
+
+    private:
+		//The clock time when the timer started
+		Uint32 mStartTicks;
+
+		//The ticks stored when the timer was paused
+		Uint32 mPausedTicks;
+
+		//The timer status
+		bool mPaused;
+		bool mStarted;
+};
+
 //The dot that will move around on the screen
 class Dot
 {
@@ -174,7 +206,7 @@ class Dot
 		void handleEvent( SDL_Event& e );
 
 		//Moves the dot and check collision against tiles
-		void move( Tile *tiles[] );
+		void move( Tile *tiles[], float timeStep );
 
 		//Centers the camera over the dot
 		void setCamera( SDL_Rect& camera );
@@ -604,7 +636,8 @@ DataStream::DataStream()
 }
 
 
-                        void SetColor(SDL_Surface* &surface, Uint8 r, Uint8 g, Uint8 b, Uint8 a, Uint8 r2=0, Uint8 g2=0, Uint8 b2=0, Uint8 a2=0) {
+                        void SetColor(SDL_Surface* &surface, Uint8 r, Uint8 g, Uint8 b, Uint8 a, Uint8 r2=0, Uint8 g2=0, Uint8 b2=0, Uint8 a2=0)
+						{
                         if (surface == NULL) {
                             printf("Surface is NULL! Cannot set color key.\n");
                             return;
@@ -695,6 +728,112 @@ void* DataStream::getBuffer()
 
 	return mImages[ mCurrentImage ]->pixels;
 }
+
+///////////////////////////////////////
+LTimer::LTimer()
+{
+    //Initialize the variables
+    mStartTicks = 0;
+    mPausedTicks = 0;
+
+    mPaused = false;
+    mStarted = false;
+}
+
+void LTimer::start()        // startstick = thời gian đã bỏ; // pausestick = thời gian đã được đếm
+{
+    //Start the timer
+    mStarted = true;
+
+    //Unpause the timer
+    mPaused = false;
+
+    //Get the current clock time
+    mStartTicks = SDL_GetTicks();
+	mPausedTicks = 0;
+}
+
+void LTimer::stop()
+{
+    //Stop the timer
+    mStarted = false;
+
+    //Unpause the timer
+    mPaused = false;
+
+	//Clear tick variables
+	mStartTicks = 0;
+	mPausedTicks = 0;
+}
+
+void LTimer::pause()
+{
+    //If the timer is running and isn't already paused
+    if( mStarted && !mPaused )
+    {
+        //Pause the timer
+        mPaused = true;
+
+        //Calculate the paused ticks
+        mPausedTicks = SDL_GetTicks() - mStartTicks;
+		mStartTicks = 0;
+    }
+}
+
+void LTimer::unpause()
+{
+    //If the timer is running and paused
+    if( mStarted && mPaused )
+    {
+        //Unpause the timer
+        mPaused = false;
+
+        //Reset the starting ticks
+        mStartTicks = SDL_GetTicks() - mPausedTicks;
+
+        //Reset the paused ticks
+        mPausedTicks = 0;
+    }
+}
+
+Uint32 LTimer::getTicks()
+{
+	//The actual timer time
+	Uint32 time = 0;
+
+    //If the timer is running
+    if( mStarted )
+    {
+        //If the timer is paused
+        if( mPaused )
+        {
+            //Return the number of ticks when the timer was paused
+            time = mPausedTicks;
+        }
+        else
+        {
+            //Return the current time minus the start time
+            time = SDL_GetTicks() - mStartTicks;
+        }
+    }
+
+    return time;
+}
+
+bool LTimer::isStarted()
+{
+	//Timer is running and paused or unpaused
+    return mStarted;
+}
+
+bool LTimer::isPaused()
+{
+	//Timer is running and paused
+    return mPaused && mStarted;
+}
+
+
+
 //////////////
 Dot::Dot()
 {
@@ -737,27 +876,33 @@ void Dot::handleEvent( SDL_Event& e )
     }
 }
 
-void Dot::move( Tile *tiles[] )
+void Dot::move( Tile *tiles[], float timeStep )
 {
     //Move the dot left or right
-    mBox.x += mVelX;
+    mBox.x += mVelX * timeStep;
 
-    //If the dot went too far to the left or right or touched a wall
-    if( ( mBox.x < 0 ) || ( mBox.x + DOT_WIDTH > LEVEL_WIDTH ) || touchesWall( mBox, tiles ) )
-    {
-        //move back
-        mBox.x -= mVelX;
-    }
+    //If the dot went too far to the left or right
+	if( mBox.x < 0 )
+	{
+		mBox.x = 0;
+	}
+	else if( mBox.x > LEVEL_WIDTH - DOT_WIDTH )
+	{
+		mBox.x = LEVEL_WIDTH - DOT_WIDTH;
+	}
 
     //Move the dot up or down
-    mBox.y += mVelY;
+    mBox.y += mVelY * timeStep;
 
-    //If the dot went too far up or down or touched a wall
-    if( ( mBox.y < 0 ) || ( mBox.y + DOT_HEIGHT > LEVEL_HEIGHT ) || touchesWall( mBox, tiles ) )
-    {
-        //move back
-        mBox.y -= mVelY;
-    }
+    //If the dot went too far up or down
+	if( mBox.y < 0 )
+	{
+		mBox.y = 0;
+	}
+	else if( mBox.y > LEVEL_HEIGHT - DOT_HEIGHT )
+	{
+		mBox.y = LEVEL_HEIGHT - DOT_HEIGHT;
+	}
 }
 
 void Dot::setCamera( SDL_Rect& camera )
@@ -1167,7 +1312,7 @@ int main( int argc, char* args[] )
 				}
 
 				//Move the dot
-				dot.move( tileSet );
+				dot.move( tileSet,1 );
 				dot.setCamera( camera );
 
 				//Clear screen
