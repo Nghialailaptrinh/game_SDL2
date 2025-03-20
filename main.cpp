@@ -215,11 +215,16 @@
  		void* getBuffer();
 
  		int getFrame(){return mFrame;}
+ 		int getCurrentImage(){return mCurrentImage;}
+ 		int getCurrentFrame(){return mCurrentFrame;}
+ 		void upCurrentFrame (int n=6){mCurrentFrame=(mCurrentFrame+1)%n;}
+ 		void upCurrentImage (){mCurrentImage=(mCurrentImage+1)%mFrame;}
 
  	private:
  		//Internal data
  		SDL_Surface* mImages[24];
  		int mCurrentImage;
+ 		int mCurrentFrame;
  		int mDelayFrames;
  		int mFrame;
  };
@@ -319,8 +324,6 @@ class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure c
     bool isWalk() { return dotCharacter.isWalk(); }
     void setBlendMode(SDL_BlendMode blending );
     void free();
-    int getFrame(){return mCurrentFrame;}
-
 private:
 
      Dot dotCharacter;
@@ -332,7 +335,6 @@ private:
      //Animation stream
      DataStream gDataStreamGo;
      DataStream gDataStreamStand;
-       int mCurrentFrame;
        bool dead;
        int HP;
 
@@ -762,8 +764,9 @@ SDL_Color nameColor {0,0,255};
  	mImages[ 22 ] = NULL;
  	mImages[ 23 ] = NULL;
 
+    mCurrentFrame = 0;
  	mCurrentImage = 0;
- 	mDelayFrames = 1;
+ 	mDelayFrames = 4;
  }
 
 
@@ -815,13 +818,8 @@ SDL_Color nameColor {0,0,255};
  	--mDelayFrames;
  	if( mDelayFrames == 0 )
  	{
- 		++mCurrentImage;
- 		mDelayFrames = 1;
- 	}
-
- 	if( mCurrentImage == mFrame )
- 	{
- 		mCurrentImage = 0;
+ 		upCurrentImage();
+ 		mDelayFrames = 2;
  	}
 
  	return mImages[ mCurrentImage ]->pixels;
@@ -1039,7 +1037,7 @@ SDL_Color nameColor {0,0,255};
  //////////////////
  // Character methods
 Character::Character()
-    : gDataStreamGo(1), gDataStreamStand(18), mCurrentFrame(0), dead(false), HP(100) {}
+    : gDataStreamGo(1), gDataStreamStand(18), dead(false), HP(100) {}
 
 bool Character::loadMedia() {
     //Loading success flag
@@ -1095,24 +1093,23 @@ void Character::setCamera(SDL_Rect& camera) {
 
 void Character::render(SDL_Rect& camera) {
     mName.render(dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - mName.getWidth() / 2 - camera.x,
-                             dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - gStreamingGo.getHeight() + 10 - camera.y);
+                             dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y);
 
 
     // Kiểm tra xem nhân vật có đang di chuyển không
     if (dotCharacter.isWalk()) {
+
         gStreamingGo.lockTexture();
         gStreamingGo.copyRawPixels32(gDataStreamGo.getBuffer());
         gStreamingGo.unlockTexture();
 
         // Cập nhật frame hoạt ảnh "go" (di chuyển)
-        mCurrentFrame++;
-        if (mCurrentFrame >= 6) {  // Giới hạn số frame
-            mCurrentFrame = 0;  // Quay lại đầu nếu hết các frame
-        }
+        gDataStreamGo.upCurrentFrame(6);
 
+        printf("Current Frame: %d\n", gDataStreamGo.getCurrentFrame());
         // Tính toán vị trí clip cho sprite
-        int x = mCurrentFrame % 6;  // Tính x từ mCurrentFrame (số cột)
-        int y = mCurrentFrame / 6;  // Tính y từ mCurrentFrame (số dòng)
+        int x = gDataStreamGo.getCurrentFrame() % 6;  // Tính x từ mCurrentFrame (số cột)
+        int y = gDataStreamGo.getCurrentFrame() / 6;  // Tính y từ mCurrentFrame (số dòng)
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
         SDL_Rect clip = { x * 80, y * 80, 80, 80 };
