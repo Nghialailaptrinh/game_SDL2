@@ -3,6 +3,7 @@
 
  #include <SDL.h>
  #include <SDL_image.h>
+ #include <SDL_ttf.h>
  #include <stdio.h>
  #include <string>
  #include <fstream>
@@ -10,8 +11,8 @@
  #include <iomanip>
 
  //Screen dimension constants
- const int SCREEN_WIDTH = 640;
- const int SCREEN_HEIGHT = 480;
+ const int SCREEN_WIDTH = 800;
+ const int SCREEN_HEIGHT = 500;
 
  //The dimensions of the level
  const int LEVEL_WIDTH = 1280;
@@ -36,9 +37,70 @@
  const int TILE_BOTTOMLEFT = 9;
  const int TILE_LEFT = 10;
  const int TILE_TOPLEFT = 11;
+////////// hàm hỗ trợ mạnh
 
 
+ void SetColor(SDL_Surface* &surface, Uint8 r, Uint8 g, Uint8 b, Uint8 a, Uint8 r2=0, Uint8 g2=0, Uint8 b2=0, Uint8 a2=0)
+{
+ if (surface == NULL) {
+     printf("Surface is NULL! Cannot set color key.\n");
+     return;
+ }
 
+ // Kiểm tra định dạng pixel
+ if (surface->format->format != SDL_PIXELFORMAT_RGBA8888) {
+     printf("Surface format is not RGBA8888! Cannot set color key.\n");
+     return;
+ }
+
+ // Lấy định dạng pixel của surface
+ SDL_PixelFormat* format = surface->format;
+
+ // Tạo màu từ các giá trị RGBA
+ Uint32 color1 = SDL_MapRGBA(format, r, g, b, a);
+ Uint32 color2;
+ if(r2==0 &&g2==0&b2==0&&a2==0)
+     {color2 = SDL_MapRGBA(format, r, g, b, 0) ;} // Nếu không có màu để đôit thì ta làm tàng hình màu nền cũ;
+ else{color2 = SDL_MapRGBA(format, r2, g2, b2, a2);} // chuyển thành màu mong muốn
+ // Lặp qua tất cả các pixel trong surface
+ Uint32* pixels = static_cast<Uint32*>(surface->pixels);
+ int pixelCount = surface->w * surface->h;
+
+ for (int i = 0; i < pixelCount; ++i) {
+     // Nếu pixel trùng với màu cần khóa, đặt alpha về 0 (trong suốt)
+     if (pixels[i] == color1) {
+         pixels[i] = color2; // Đặt alpha = 0
+     }
+ }
+}
+
+// Hàm thay đổi kích thước của SDL_Surface
+ SDL_Surface* resizeSurface(SDL_Surface* original, int newWidth, int newHeight)
+{
+    // Tạo một surface mới với kích thước mong muốn
+    SDL_Surface* resizedSurface = SDL_CreateRGBSurface(
+        0, newWidth, newHeight, original->format->BitsPerPixel,
+        original->format->Rmask, original->format->Gmask,
+        original->format->Bmask, original->format->Amask
+    );
+
+    if (resizedSurface == nullptr) {
+        std::printf( "Unable to create resized surface! SDL_Error: %s\n " , SDL_GetError() );
+        return nullptr;
+    }
+
+    // Sao chép dữ liệu từ surface ban đầu vào surface mới với kích thước thay đổi
+    if (SDL_BlitScaled(original, NULL, resizedSurface, NULL) != 0) {
+        std::printf( "Unable to resize surface! SDL_Error: %s\n ", SDL_GetError());
+        SDL_FreeSurface(resizedSurface); // Giải phóng surface nếu gặp lỗi
+        return nullptr;
+    }
+
+    return resizedSurface;
+}
+
+
+////////////
  //Texture wrapper class
  class LTexture
  {
@@ -152,6 +214,8 @@
  		//Gets current frame data
  		void* getBuffer();
 
+ 		int getFrame(){return mFrame;}
+
  	private:
  		//Internal data
  		SDL_Surface* mImages[24];
@@ -223,9 +287,9 @@
  		int GetY(){return mBox.y;}
 
         // check direction
-        isRight(){return goRight;}
+        bool isRight(){return goRight;}
 
-        isWalk (){return walk;}
+        bool isWalk (){return walk;}
      private:
  		//Collision box of the dot
  		SDL_Rect mBox;
@@ -237,6 +301,42 @@
  		bool goRight;
  	    bool goLeft;
  };
+
+
+class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure có luồng datastream
+{ public:
+    Character();
+    bool loadMedia();
+    void handleEvent(SDL_Event& e);
+    void move(Tile* tiles[], float timeStep);
+    void setCamera(SDL_Rect& camera);
+    void render(SDL_Rect& camera);
+
+
+    int GetX() { return dotCharacter.GetX(); }
+    int GetY() { return dotCharacter.GetY(); }
+    bool isRight() { return dotCharacter.isRight(); }
+    bool isWalk() { return dotCharacter.isWalk(); }
+    void setBlendMode(SDL_BlendMode blending );
+    void free();
+    int getFrame(){return mCurrentFrame;}
+
+private:
+
+     Dot dotCharacter;
+
+     //Scene textures
+     LTexture mName;
+     LTexture gStreamingGo;
+     LTexture gStreamingStand;
+     //Animation stream
+     DataStream gDataStreamGo;
+     DataStream gDataStreamStand;
+       int mCurrentFrame;
+       bool dead;
+       int HP;
+
+};
 
  //Starts up SDL and creates window
  bool init();
@@ -262,15 +362,14 @@
  //The window renderer
  SDL_Renderer* gRenderer = NULL;
 
- //Scene textures
- LTexture gStreamingGo;
- LTexture gStreamingStand;
- //Animation stream
- DataStream gDataStreamGo(24);
- DataStream gDataStreamStand(18);
+ //Globally used font
+ TTF_Font* gFont = NULL;
+
+Character gCharacter;
+SDL_Color nameColor {0,0,255};
 
  //Scene textures
- LTexture gDotTexture;
+ LTexture gDotTexture; //thuận tiện test thay vì dùng hoạt ảnh
  LTexture gTileTexture;
  SDL_Rect gTileClips[ TOTAL_TILE_SPRITES ];
 
@@ -668,39 +767,6 @@
  }
 
 
-                         void SetColor(SDL_Surface* &surface, Uint8 r, Uint8 g, Uint8 b, Uint8 a, Uint8 r2=0, Uint8 g2=0, Uint8 b2=0, Uint8 a2=0)
- 						{
-                         if (surface == NULL) {
-                             printf("Surface is NULL! Cannot set color key.\n");
-                             return;
-                         }
-
-                         // Kiểm tra định dạng pixel
-                         if (surface->format->format != SDL_PIXELFORMAT_RGBA8888) {
-                             printf("Surface format is not RGBA8888! Cannot set color key.\n");
-                             return;
-                         }
-
-                         // Lấy định dạng pixel của surface
-                         SDL_PixelFormat* format = surface->format;
-
-                         // Tạo màu từ các giá trị RGBA
-                         Uint32 color1 = SDL_MapRGBA(format, r, g, b, a);
-                         Uint32 color2;
-                         if(r2==0 &&g2==0&b2==0&&a2==0)
-                             {color2 = SDL_MapRGBA(format, r, g, b, 0) ;} // Nếu không có màu để đôit thì ta làm tàng hình màu nền cũ;
-                         else{color2 = SDL_MapRGBA(format, r2, g2, b2, a2);} // chuyển thành màu mong muốn
-                         // Lặp qua tất cả các pixel trong surface
-                         Uint32* pixels = static_cast<Uint32*>(surface->pixels);
-                         int pixelCount = surface->w * surface->h;
-
-                         for (int i = 0; i < pixelCount; ++i) {
-                             // Nếu pixel trùng với màu cần khóa, đặt alpha về 0 (trong suốt)
-                             if (pixels[i] == color1) {
-                                 pixels[i] = color2; // Đặt alpha = 0
-                             }
-                         }
-                     }
  bool DataStream::loadMedia( std:: string path1)
  {
  	bool success = true;
@@ -718,9 +784,9 @@
  		}
  		else
  		{
-
+             if(mFrame!=1){loadedSurface=resizeSurface(loadedSurface,80,80);}
              mImages[i] = SDL_ConvertSurfaceFormat(loadedSurface, SDL_PIXELFORMAT_RGBA8888, 0);
-             SetColor(mImages[i],255,255,255,255); //khóa màu nền
+             SetColor(mImages[i],255,255,255,0); //khóa màu nền
              // ta cần bật chế độ blen mode của texture sau đó
 
 
@@ -971,6 +1037,123 @@
  	gDotTexture.render( mBox.x - camera.x, mBox.y - camera.y );
  }
  //////////////////
+ // Character methods
+Character::Character()
+    : gDataStreamGo(1), gDataStreamStand(18), mCurrentFrame(0), dead(false), HP(100) {}
+
+bool Character::loadMedia() {
+    //Loading success flag
+ 	bool success = true;
+ 	if( !mName.loadFromRenderedText("Nghia sad thu",nameColor) )
+ 	{
+ 		printf( "Failed to create Name texture!\n" );
+ 		success = false;
+ 	}
+
+// 	if( !gStreamingGo.createBlank( 80, 80 ) )
+// 	{
+// 		printf( "Failed to create streamingGo texture!\n" );
+// 		success = false;
+// 	}
+    if( !gStreamingGo.createBlank( 480, 320 ) )
+        {
+            printf( "Failed to create streamingGo texture!\n" );
+            success = false;
+        }
+ 	if( !gStreamingStand.createBlank( 80, 80 ) )
+ 	{
+ 		printf( "Failed to create streamingStand texture!\n" );
+ 		success = false;
+ 	}
+
+ 	//Load data stream
+ 	if( !gDataStreamGo.loadMedia("image/character/Walk_full_") )
+ 	{
+ 		printf( "Unable to load data stream!\n" );
+ 		success = false;
+ 	}
+ 	if( !gDataStreamStand.loadMedia("image/character/Idle/0_Valkyrie_Idle_0") )
+ 	{
+ 		printf( "Unable to load data stream!\n" );
+ 		success = false;
+ 	}
+
+ 	return success;
+}
+
+void Character::handleEvent(SDL_Event& e) {
+    dotCharacter.handleEvent(e);
+}
+
+void Character::move(Tile* tiles[], float timeStep) {
+    dotCharacter.move(tiles, timeStep);
+}
+
+void Character::setCamera(SDL_Rect& camera) {
+    dotCharacter.setCamera(camera);
+}
+
+void Character::render(SDL_Rect& camera) {
+    mName.render(dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - mName.getWidth() / 2 - camera.x,
+                             dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - gStreamingGo.getHeight() + 10 - camera.y);
+
+
+    // Kiểm tra xem nhân vật có đang di chuyển không
+    if (dotCharacter.isWalk()) {
+        gStreamingGo.lockTexture();
+        gStreamingGo.copyRawPixels32(gDataStreamGo.getBuffer());
+        gStreamingGo.unlockTexture();
+
+        // Cập nhật frame hoạt ảnh "go" (di chuyển)
+        mCurrentFrame++;
+        if (mCurrentFrame >= 6) {  // Giới hạn số frame
+            mCurrentFrame = 0;  // Quay lại đầu nếu hết các frame
+        }
+
+        // Tính toán vị trí clip cho sprite
+        int x = mCurrentFrame % 6;  // Tính x từ mCurrentFrame (số cột)
+        int y = mCurrentFrame / 6;  // Tính y từ mCurrentFrame (số dòng)
+
+        // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
+        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
+
+        // Vẽ sprite với camera offset
+        gStreamingGo.render(
+            dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - 40 - camera.x,
+            dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y,
+            &clip,        // Vùng cắt cho sprite
+            0,            // Góc xoay (không xoay)
+            NULL,         // Không có điểm xoay
+            (!dotCharacter.isRight()) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
+        );
+    }
+     else {
+        // Nếu không đi, render đứng yên
+        gStreamingStand.lockTexture();
+        gStreamingStand.copyRawPixels32(gDataStreamStand.getBuffer());
+        gStreamingStand.unlockTexture();
+        gStreamingStand.render(dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - gStreamingStand.getWidth() / 2 - camera.x,
+                               dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - gStreamingStand.getHeight() + 10 - camera.y,
+                               nullptr, 0, NULL, (!dotCharacter.isRight()) ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE);
+    }
+
+}
+
+void Character::setBlendMode(SDL_BlendMode blending){
+    gStreamingGo.setBlendMode(blending);
+    gStreamingStand.setBlendMode(blending);
+}
+void Character::free(){
+
+     //Scene textures
+     gStreamingGo.free();
+     gStreamingStand.free();
+     //Animation stream
+     gDataStreamGo.free();
+     gDataStreamStand.free();
+     dead=0;
+     HP=100;
+}
  bool init()
  {
  	//Initialization flag
@@ -1018,6 +1201,12 @@
  					printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
  					success = false;
  				}
+ 				//Initialize SDL_ttf
+				if( TTF_Init() == -1 )
+				{
+					printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError() );
+					success = false;
+				}
  			}
  		}
  	}
@@ -1030,10 +1219,25 @@
  	//Loading success flag
  	bool success = true;
 
+ 	//Open the font
+	gFont = TTF_OpenFont( "font/lazy.ttf", 12 );
+	if( gFont == NULL )
+	{
+		printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
+		success = false;
+	}
+
  	//Load dot texture
- 	if( !gDotTexture.loadFromFile( "image/dot.bmp" ) )
+ 	if( !gDotTexture.loadFromFile( "image/dot.bmp" ) ) // nhiều trường hợp dùng dot để test
  	{
  		printf( "Failed to load dot texture!\n" );
+ 		success = false;
+ 	}
+
+ 	//Load dot texture
+ 	if( !gCharacter.loadMedia() )
+ 	{
+ 		printf( "Failed to load character!\n" );
  		success = false;
  	}
 
@@ -1048,28 +1252,6 @@
  	if( !setTiles( tiles ) )
  	{
  		printf( "Failed to load tile set!\n" );
- 		success = false;
- 	}
- 	if( !gStreamingGo.createBlank( 80, 80 ) )
- 	{
- 		printf( "Failed to create streamingGo texture!\n" );
- 		success = false;
- 	}
- 	if( !gStreamingStand.createBlank( 80, 80 ) )
- 	{
- 		printf( "Failed to create streamingStand texture!\n" );
- 		success = false;
- 	}
-
- 	//Load data stream
- 	if( !gDataStreamGo.loadMedia("image/character/Walking/0_Valkyrie_Walking_0") )
- 	{
- 		printf( "Unable to load data stream!\n" );
- 		success = false;
- 	}
- 	if( !gDataStreamStand.loadMedia("image/character/Idle/0_Valkyrie_Idle_0") )
- 	{
- 		printf( "Unable to load data stream!\n" );
  		success = false;
  	}
 
@@ -1092,9 +1274,7 @@
  	gDotTexture.free();
  	gTileTexture.free();
 
- 	//
- 	gStreamingGo.free();
- 	gDataStreamGo.free();
+ 	gCharacter.free();
 
  	//Destroy window
  	SDL_DestroyRenderer( gRenderer );
@@ -1102,7 +1282,12 @@
  	gWindow = NULL;
  	gRenderer = NULL;
 
+ 	//Free global font
+	TTF_CloseFont( gFont );
+	gFont = NULL;
+
  	//Quit SDL subsystems
+ 	TTF_Quit();
  	IMG_Quit();
  	SDL_Quit();
  }
@@ -1334,9 +1519,6 @@
  			//Event handler
  			SDL_Event e;
 
- 			//The dot that will be moving around on the screen
- 			Dot dot;
-
  			//Level camera
  			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
@@ -1353,17 +1535,14 @@
  					}
 
  					//Handle input for the dot
- 					dot.handleEvent( e );
+ 					gCharacter.handleEvent( e );
  				}
 
- 				//Move the dot
+ 				//Move the character
+ 				gCharacter.move(tileSet,1);
+ 				gCharacter.setCamera( camera );
 
- 				dot.move( tileSet,1 );
- 				dot.setCamera( camera );
-
- 				//Clear screen
- 				gStreamingGo.setBlendMode(SDL_BLENDMODE_BLEND);
- 				gStreamingStand.setBlendMode(SDL_BLENDMODE_BLEND);
+                gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
  				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
  				SDL_RenderClear( gRenderer );
 
@@ -1373,36 +1552,16 @@
  					tileSet[ i ]->render( camera );
  				}
 
- //				//Render dot
- //				dot.render( camera );
 
- 				//Copy frame from buffer
- 				if(dot.isWalk()){
- 				gStreamingGo.lockTexture();
- 				gStreamingGo.copyRawPixels32( gDataStreamGo.getBuffer() );
- 				gStreamingGo.unlockTexture();
- //				//Render frame
+                gCharacter.render(camera);
 
- 				gStreamingGo.render( dot.GetX()  + dot.DOT_WIDTH/2 -gStreamingGo.getWidth()/2 -camera.x , dot.GetY() + dot.DOT_HEIGHT-gStreamingGo.getHeight()+10 -camera.y,nullptr,0,NULL,((!dot.isRight())?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE));
- 				}
-
- 				else{
-                gStreamingStand.lockTexture();
- 				gStreamingStand.copyRawPixels32( gDataStreamStand.getBuffer() );
- 				gStreamingStand.unlockTexture();
- //				//Render frame
-
- 				gStreamingStand.render( dot.GetX()  + dot.DOT_WIDTH/2 -gStreamingStand.getWidth()/2 -camera.x , dot.GetY() + dot.DOT_HEIGHT-gStreamingStand.getHeight()+10 -camera.y,nullptr,0,NULL,((!dot.isRight())?SDL_FLIP_HORIZONTAL:SDL_FLIP_NONE));
-
- 				}
  				//Update scree
  				SDL_RenderPresent( gRenderer );
- 			}
- 		}
+            }
 
  		//Free resources and close SDL
  		close( tileSet );
- 	}
-
+        }
+    }
  	return 0;
  }
