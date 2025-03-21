@@ -213,7 +213,7 @@
  		void free();
 
  		//Gets current frame data
- 		void* getBuffer();
+ 		void* getBuffer(int n=0);
 
  		int getFrame(){return mFrame;}
  		int getCurrentImage(){return mCurrentImage;}
@@ -281,10 +281,11 @@
  		static const int DOT_VEL = 100;
 
  		//Initializes the variables
- 		Dot();
+ 		Dot(int x=50,int y=50);
 
  		//Takes key presses and adjusts the dot's velocity
  		void handleEvent( SDL_Event& e );
+ 		void AiHandleEvent( Tile *tiles[] );
 
  		//Moves the dot and check collision against tiles
  		void move( Tile *tiles[], float timeStep );
@@ -294,12 +295,17 @@
 
  		//Shows the dot on the screen
  		void render( SDL_Rect& camera );
+
+
+ 		void SetDie(bool Die){die=Die;}
  		//get HP
  		int getHP (){return mHP;}
 
  		// Get x,y
  		int GetX(){return mBox.x;}
  		int GetY(){return mBox.y;}
+
+ 		int GetHP(){return mHP;}
 
         // check direction
         bool isRight(){return goRight;}
@@ -309,22 +315,25 @@
 
         bool isWalk (){return walk;}
         bool isRun (){return run;}
+        bool isDead(){return dead;}
         bool isDie (){return die;}
+
      private:
  		//Collision box of the dot
  		SDL_Rect mBox;
 
- 		int mHP;
-
  		//The velocity of the dot
  		int mVelX, mVelY;
  		bool die;
+ 		bool dead;
         bool run;
  		bool walk;
  		bool goRight;
  		bool goLeft;
  	    bool goUp;
  	    bool goDown;
+        int mHP;
+
  };
 
 
@@ -349,8 +358,9 @@ class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure c
     bool isRun() { return dotCharacter.isRun(); }
     void setBlendMode(SDL_BlendMode blending );
     void free();
-    int GetHP(){return mHP;};
-    bool isDead(){return dead;}
+    int GetHP(){return dotCharacter.GetHP();};
+    bool isDead(){return dotCharacter.isDead();}
+    bool isDie(){return dotCharacter.isDie();}
 private:
 
      Dot dotCharacter;
@@ -366,12 +376,93 @@ private:
      DataStream gDataStreamGo;
      DataStream gDataStreamStand;
      DataStream gDataStreamRun;
-      DataStream gDataStreamDie;
-       bool dead;
-       bool died;
-       int mHP;
+     DataStream gDataStreamDie;
+
 
 };
+
+
+enum EnemyType {
+    Slime = 1,
+    Goblin = 2,
+    Wolve = 3,
+    Bee = 4
+};
+
+//class Enemy
+//{
+//  public:
+//    Enemy(int x=0,int y=0,EnemyType TypeEnemy1=Slime);
+//    void AiHandleEvent(SDL_Event& e);
+//    void move(Tile* tiles[], float timeStep);
+//    void render(SDL_Rect& camera);
+//
+//
+//    int GetX() { return dotEnemy.GetX(); }
+//    int GetY() { return dotEnemy.GetY(); }
+//    bool isRight() { return dotEnemy.isRight(); }
+//    bool isLeft() { return dotEnemy.isLeft(); }
+//    bool isUp(){ return dotEnemy.isUp();}
+//    bool isDown() { return dotEnemy.isDown(); }
+//
+//    bool isWalk() { return dotEnemy.isWalk(); }
+//    bool isRun() { return dotEnemy.isRun(); }
+//
+//    void free();
+//    int GetHP(){return dotEnemy.GetHP();};
+//    bool isDead(){return dotEnemy.isDead();}
+//    bool isDie(){return dotEnemy.isDie();}
+//private:
+//
+//     Dot dotEnemy;
+//
+//    EnemyType TypeEnemy;
+//
+//};
+
+//class ETexture
+//{
+//    private:
+//     LTexture HP;
+//     ////
+//     LTexture gStreamingGo1;
+//     LTexture gStreamingAttack1;
+//     LTexture gStreamingDie1;
+//
+//     DataStream gDataStreamGo1;
+//     DataStream gDataStreamAttack1;
+//     DataStream gDataStreamDie1;
+//     ////
+//     LTexture gStreamingGo2;
+//     LTexture gStreamingAttack2;
+//     LTexture gStreamingDie2;
+//
+//     DataStream gDataStreamGo2;
+//     DataStream gDataStreamAttack2;
+//     DataStream gDataStreamDie2;
+//     ////
+//     LTexture gStreamingGo3;
+//     LTexture gStreamingAttack3;
+//     LTexture gStreamingDie3;
+//
+//     DataStream gDataStreamGo3;
+//     DataStream gDataStreamAttack3;
+//     DataStream gDataStreamDie3;
+//     ////
+//     LTexture gStreamingGo4;
+//     LTexture gStreamingAttack4;
+//     LTexture gStreamingDie4;
+//     DataStream gDataStreamGo4;
+//     DataStream gDataStreamAttack4;
+//     DataStream gDataStreamDie4;
+//  public:
+//      ETexture();
+//     bool loadMedia();
+//     void render(SDL_Rect& camera,Dot Enemy);
+//     void setBlendMode(SDL_BlendMode blending );
+//     void free();
+//
+//};
 
  //Starts up SDL and creates window
  bool init();
@@ -407,6 +498,7 @@ SDL_Color HPColor {0,100,255};
  //Scene textures
  LTexture gDotTexture; //thuận tiện test thay vì dùng hoạt ảnh
  LTexture gTileTexture;
+ LTexture gOverTexture; // kết thúc;
  SDL_Rect gTileClips[ TOTAL_TILE_SPRITES ];
 
 
@@ -847,8 +939,9 @@ SDL_Color HPColor {0,100,255};
  	}
  }
 
- void* DataStream::getBuffer()
+ void* DataStream::getBuffer(int n)
  {
+     if(n==0){
  	--mDelayFrames;
  	if( mDelayFrames == 0 )
  	{
@@ -856,8 +949,10 @@ SDL_Color HPColor {0,100,255};
  		mDelayFrames = 2;
  	}
 
- 	return mImages[ mCurrentImage ]->pixels;
+ 	return mImages[ mCurrentImage ]->pixels;}
+ 	else return mImages[ n-1 ]->pixels;
  }
+
 
  ///////////////////////////////////////
  LTimer::LTimer()
@@ -965,11 +1060,11 @@ SDL_Color HPColor {0,100,255};
 
 
  //////////////
- Dot::Dot()
+ Dot::Dot(int x,int y)
  {
      //Initialize the collision box
-     mBox.x = 50;
-     mBox.y = 50;
+     mBox.x = x;
+     mBox.y = y;
  	mBox.w = DOT_WIDTH;
  	mBox.h = DOT_HEIGHT;
 
@@ -980,10 +1075,12 @@ SDL_Color HPColor {0,100,255};
     walk=0;
     run=0;
     die=0;
+    dead=0;
     goRight = 1;
     goLeft = 0;
     goUp =0;
     goDown = 0;
+    mHP=100;
 
  }
 
@@ -995,10 +1092,10 @@ SDL_Color HPColor {0,100,255};
          //Adjust the velocity
          switch( e.key.keysym.sym )
          {
-             case SDLK_UP: mVelY -= DOT_VEL;break;
-             case SDLK_DOWN: mVelY += DOT_VEL;  break;
-             case SDLK_LEFT: mVelX -= DOT_VEL; break;
-             case SDLK_RIGHT: mVelX += DOT_VEL;  break;
+             case SDLK_UP: case SDLK_w: mVelY -= DOT_VEL;break;
+             case SDLK_DOWN: case SDLK_s : mVelY += DOT_VEL;  break;
+             case SDLK_LEFT: case SDLK_a : mVelX -= DOT_VEL; break;
+             case SDLK_RIGHT: case SDLK_d : mVelX += DOT_VEL;  break;
              case SDLK_LSHIFT: run=1; break;
          }
 
@@ -1012,10 +1109,10 @@ SDL_Color HPColor {0,100,255};
          //Adjust the velocity
          switch( e.key.keysym.sym )
          {   case SDLK_LSHIFT: run=0; break;
-             case SDLK_UP: mVelY += DOT_VEL; break;
-             case SDLK_DOWN: mVelY -= DOT_VEL; break;
-             case SDLK_LEFT: mVelX += DOT_VEL; break;
-             case SDLK_RIGHT: mVelX -= DOT_VEL; break;
+             case SDLK_UP: case SDLK_w: mVelY += DOT_VEL; break;
+             case SDLK_DOWN: case SDLK_s : mVelY -= DOT_VEL; break;
+             case SDLK_LEFT: case SDLK_a : mVelX += DOT_VEL; break;
+             case SDLK_RIGHT: case SDLK_d :  mVelX -= DOT_VEL; break;
          }
      }
 
@@ -1031,6 +1128,52 @@ SDL_Color HPColor {0,100,255};
 
  }
 
+void Dot::AiHandleEvent(Tile *tiles[]) {
+    static int timeCounter = 0;  // Biến đếm thời gian để thay đổi hướng mỗi khi di chuyển qua 1 đoạn
+
+    // Tăng biến đếm thời gian (bạn có thể sử dụng timeStep hoặc các giá trị khác để điều khiển tốc độ)
+    timeCounter++;
+
+    // Di chuyển theo quỹ đạo hình vuông 100x100
+    if (timeCounter < 10) {  // Di chuyển sang phải
+        mVelX = DOT_VEL;
+        mVelY = 0;
+    }
+    else if (timeCounter >= 10 && timeCounter < 20) {  // Di chuyển xuống dưới
+        mVelX = 0;
+        mVelY = DOT_VEL;
+    }
+    else if (timeCounter >= 20 && timeCounter < 30) {  // Di chuyển sang trái
+        mVelX = -DOT_VEL;
+        mVelY = 0;
+    }
+    else if (timeCounter >= 30 && timeCounter < 40) {  // Di chuyển lên trên
+        mVelX = 0;
+        mVelY = -DOT_VEL;
+    }
+
+    // Khi timeCounter đạt 100, reset lại để bắt đầu vòng lặp mới
+    if (timeCounter >= 40) {
+        timeCounter = 0;
+    }
+
+    if(mVelX!=0 || mVelY!=0){walk=1;}
+     else walk =0;
+
+      if(mVelX==0 && mVelY==0){}
+      else{goUp = 0;goDown =0; goRight=0; goLeft =0;
+      if(mVelX>0)goRight=1;
+      else if(mVelX<0)goLeft=1;
+      else if(mVelY<0)goUp=1;
+      else goDown=1;}
+
+      int a=mBox.x;
+      int b=mBox.y;
+      move( tiles,  0.01 );
+      int a2=mBox.x;
+      int b2=mBox.y;
+      if(a==a2||b==b2){ timeCounter=( timeCounter+10)%40;}
+}
 
  void Dot::move( Tile *tiles[], float timeStep )
  {
@@ -1043,7 +1186,7 @@ SDL_Color HPColor {0,100,255};
      {
          //move back
          mBox.x -= mVelX* timeStep *i;
-         mHP--;
+         //mHP--;
      }
 
      //Move the dot up or down
@@ -1055,8 +1198,9 @@ SDL_Color HPColor {0,100,255};
      {
          //move back
          mBox.y -= mVelY* timeStep *i;
-         mHP--;
+        // mHP--;
      }
+      if(mHP<=0){dead=1; printf("dead \n");}
 
  }
 
@@ -1093,7 +1237,7 @@ SDL_Color HPColor {0,100,255};
  //////////////////
  // Character methods
 Character::Character()
-    : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1), dead(false), died(false), mHP(100) {}
+    : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1){}
 
 bool Character::loadMedia() {
     //Loading success flag
@@ -1140,20 +1284,45 @@ bool Character::loadMedia() {
  		printf( "Unable to load data streamGo!\n" );
  		success = false;
  	}
+ 	else{
+       gStreamingGo.lockTexture();
+        gStreamingGo.copyRawPixels32(gDataStreamGo.getBuffer());
+        gStreamingGo.unlockTexture();
+    }
+
  	if( !gDataStreamStand.loadMedia("image/character/Sword_Idle_full_") )
  	{
  		printf( "Unable to load data streamStand!\n" );
  		success = false;
+
  	}
+ 	else{
+        gStreamingStand.lockTexture();
+        gStreamingStand.copyRawPixels32(gDataStreamStand.getBuffer());
+        gStreamingStand.unlockTexture();
+ 	}
+
     if( !gDataStreamRun.loadMedia("image/character/Sword_Run_full_") )
     {
         printf( "Unable to load data streamRun!\n" );
         success = false;
+
+    }
+    else{
+        gStreamingRun.lockTexture();
+        gStreamingRun.copyRawPixels32(gDataStreamRun.getBuffer());
+        gStreamingRun.unlockTexture();
     }
     if( !gDataStreamDie.loadMedia("image/character/Sword_Death_full_") )
     {
         printf( "Unable to load data streamDie!\n" );
         success = false;
+
+    }
+    else{
+        gStreamingDie.lockTexture();
+        gStreamingDie.copyRawPixels32(gDataStreamDie.getBuffer());
+        gStreamingDie.unlockTexture();
     }
 
 
@@ -1165,9 +1334,9 @@ void Character::handleEvent(SDL_Event& e) {
     dotCharacter.handleEvent(e);
 }
 
+
 void Character::move(Tile* tiles[], float timeStep) {
     dotCharacter.move(tiles, timeStep);
-    mHP=dotCharacter.getHP();
     std::stringstream path;
         path << (GetHP()) << "/100";
         HP.free();
@@ -1175,7 +1344,6 @@ void Character::move(Tile* tiles[], float timeStep) {
  	{
  		printf( "Failed to create HP texture!\n" );
  	}
-    if(mHP<=0)dead=1;
 }
 
 void Character::setCamera(SDL_Rect& camera) {
@@ -1201,19 +1369,43 @@ void Character::render(SDL_Rect& camera) {
 
 
     // Kiểm tra xem nhân vật có đang di chuyển không
+    if(isDead()){
 
-    if(dotCharacter.isRun() && dotCharacter.isWalk()){
 
- 	    gStreamingRun.lockTexture();
-        gStreamingRun.copyRawPixels32(gDataStreamRun.getBuffer());
-        gStreamingRun.unlockTexture();
+        // Cập nhật frame hoạt ảnh "die" (di chuyển)
+        Frame=16;
+        gDataStreamDie.upCurrentFrame(Frame);
+        if(gDataStreamDie.getCurrentFrame()==15){dotCharacter.SetDie(1);printf("died \n");}
+        // Tính toán vị trí clip cho sprite
+        int x = (gDataStreamDie.getCurrentFrame() % Frame)/2;  // Tính x từ mCurrentFrame (số cột)
+        int y = gDataStreamDie.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
+
+        // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
+        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
+
+
+        // Vẽ sprite với camera offset
+        gStreamingDie.render(
+            X,
+            Y,
+            &clip,        // Vùng cắt cho sprite
+            0,            // Góc xoay (không xoay)
+            NULL,         // Không có điểm xoay
+            SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
+        );
+
+    }
+
+     else if(dotCharacter.isRun() && dotCharacter.isWalk()){
+
+
 
         // Cập nhật frame hoạt ảnh "go" (di chuyển)
         Frame=8;
         gDataStreamRun.upCurrentFrame(Frame);
 
         // Tính toán vị trí clip cho sprite
-        int x = gDataStreamRun.getCurrentFrame();  // Tính x từ mCurrentFrame (số cột)
+        int x = gDataStreamRun.getCurrentFrame()%Frame;  // Tính x từ mCurrentFrame (số cột)
         int y = gDataStreamRun.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
@@ -1231,16 +1423,14 @@ void Character::render(SDL_Rect& camera) {
     }
     else if (dotCharacter.isWalk()) {
 
- 	    gStreamingGo.lockTexture();
-        gStreamingGo.copyRawPixels32(gDataStreamGo.getBuffer());
-        gStreamingGo.unlockTexture();
+
 
         // Cập nhật frame hoạt ảnh "go" (di chuyển)
         Frame=6;
         gDataStreamGo.upCurrentFrame(Frame);
 
         // Tính toán vị trí clip cho sprite
-        int x = gDataStreamGo.getCurrentFrame() ;  // Tính x từ mCurrentFrame (số cột)
+        int x = gDataStreamGo.getCurrentFrame() %Frame;  // Tính x từ mCurrentFrame (số cột)
         int y = gDataStreamGo.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
@@ -1257,46 +1447,17 @@ void Character::render(SDL_Rect& camera) {
             SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
         );
     }
-    else if(dotCharacter.isDie()){
-         gStreamingDie.lockTexture();
-        gStreamingDie.copyRawPixels32(gDataStreamDie.getBuffer());
-        gStreamingDie.unlockTexture();
 
-        // Cập nhật frame hoạt ảnh "die" (di chuyển)
-        Frame=8;
-        gDataStreamGo.upCurrentFrame(Frame);
-        //if(Frame==9)
-        // Tính toán vị trí clip cho sprite
-        int x = gDataStreamGo.getCurrentFrame() % Frame;  // Tính x từ mCurrentFrame (số cột)
-        int y = gDataStreamGo.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
-
-        // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
-        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
-
-
-        // Vẽ sprite với camera offset
-        gStreamingGo.render(
-            X,
-            Y,
-            &clip,        // Vùng cắt cho sprite
-            0,            // Góc xoay (không xoay)
-            NULL,         // Không có điểm xoay
-            SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
-        );
-
-    }
      else {
         // Nếu không đi, render đứng yên
-        gStreamingStand.lockTexture();
-        gStreamingStand.copyRawPixels32(gDataStreamStand.getBuffer());
-        gStreamingStand.unlockTexture();
+
 
         // Cập nhật frame hoạt ảnh "go" (di chuyển)
         Frame=((dotCharacter.isUp())? 4:12);
         gDataStreamStand.upCurrentFrame(Frame);
 
         // Tính toán vị trí clip cho sprite
-        int x = gDataStreamStand.getCurrentFrame() ;  // Tính x từ mCurrentFrame (số cột)
+        int x = gDataStreamStand.getCurrentFrame() %Frame ;  // Tính x từ mCurrentFrame (số cột)
         int y = gDataStreamStand.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
@@ -1319,20 +1480,117 @@ void Character::setBlendMode(SDL_BlendMode blending){
     gStreamingGo.setBlendMode(blending);
     gStreamingStand.setBlendMode(blending);
     gStreamingRun.setBlendMode(blending);
+    gStreamingDie.setBlendMode(blending);
 }
+
 void Character::free(){
 
      //Scene textures
      gStreamingGo.free();
      gStreamingStand.free();
      gStreamingRun.free();
+      gStreamingDie.free();
      //Animation stream
      gDataStreamGo.free();
      gDataStreamStand.free();
      gDataStreamRun.free();
-     dead=0;
-     mHP=100;
+     gDataStreamDie.free();
+
 }
+
+
+/////////////////
+//Enemy::Enemy(int x,int y,EnemyType TypeEnemy1): dotEnemy(x,y),TypeEnemy(TypeEnemy1){}
+//
+//void Enemy::AiHandleEvent(SDL_Event& e){
+//dotEnemy.AiHandleEvent(e);
+//}
+//
+//void Enemy:: move(Tile* tiles[], float timeStep){
+//dotEnemy.move( tiles,timeStep );
+//
+//}
+//
+//void Enemy::render(SDL_Rect& camera) {
+//    dotEnemy.render(camera);  // Render đối tượng Dot (có thể chứa hoạt ảnh của enemy)
+//}
+//
+//void Enemy::free(){dotEnemy=Dot(dotEnemy.GetX(), dotEnemy.GetY());
+//TypeEnemy=static_cast<EnemyType>(rand() % 4 + 1);
+//}
+/////////////
+//ETexture::ETexture()
+//    :gDataStreamGo1(1), gDataStreamGo2(1), gDataStreamGo3(1), gDataStreamGo4(1),
+//      gDataStreamAttack1(1), gDataStreamAttack2(1),gDataStreamAttack3(1),gDataStreamAttack4(1),
+//        gDataStreamDie1(1),gDataStreamDie2(1),gDataStreamDie3(1),gDataStreamDie4(1){}
+//
+// bool ETexture:: loadMedia(){
+// //Loading success flag
+// 	bool success = true;
+//
+//    if( !(gStreamingGo1.createBlank( 480, 80 )&&gStreamingGo2.createBlank( 480, 80 )&&gStreamingGo3.createBlank( 480, 80 )&&gStreamingGo4.createBlank( 480, 80 )) )
+//        {
+//            printf( "Failed to create streamingGo texture!\n" );
+//            success = false;
+//        }
+// 	if( !(gStreamingAttack1.createBlank( 480, 80 )&&gStreamingAttack2.createBlank( 480, 80 )&&gStreamingAttack3.createBlank( 480, 80 )&&gStreamingAttack4.createBlank( 480, 80 )) )
+//        {
+//            printf( "Failed to create streamingAttack texture!\n" );
+//            success = false;
+//        }
+//    if( !(gStreamingDie1.createBlank( 480, 80 )&&gStreamingDie2.createBlank( 480, 80 )&&gStreamingDie3.createBlank( 480, 80 )&&gStreamingDie4.createBlank( 480, 80 )) )
+//    {
+//        printf( "Failed to create streamingGo texture!\n" );
+//        success = false;
+//    }
+//
+//
+// 	//Load data stream
+// 	if( !gDataStreamGo1.loadMedia("image/enemy/Death_") )
+// 	{
+// 		printf( "Unable to load data streamGo1!\n" );
+// 		success = false;
+// 	}
+//
+// }
+//
+// void ETexture:: render(SDL_Rect& camera,Dot dotEnemy){
+//  int X=dotEnemy.GetX() + dotEnemy.DOT_WIDTH / 2 - 40 - camera.x;
+//    int Y=dotEnemy.GetY() + dotEnemy.DOT_HEIGHT - 80 + 10 - camera.y;
+//    int Frame;
+//
+//  Frame=6;
+//    int i;
+//    if(dotEnemy.isRight()) i=2;
+//    else if(dotEnemy.isLeft()) i=1;
+//    else if(dotEnemy.isUp()) i=3;
+//    else i=0;
+//        gStreamingGo1.lockTexture();
+//        gStreamingGo1.copyRawPixels32(gDataStreamGo1.getBuffer(i));
+//        gStreamingGo1.unlockTexture();
+//
+//
+//        gDataStreamGo1.upCurrentFrame(Frame);
+//
+//        // Tính toán vị trí clip cho sprite
+//        int x = gDataStreamGo1.getCurrentFrame()%Frame;  // Tính x từ mCurrentFrame (số cột)
+//        int y = gDataStreamGo1.getCurrentFrame() / Frame ;  // Tính y từ mCurrentFrame (số dòng)
+//
+//        // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
+//        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
+//
+//        // Vẽ sprite với camera offset
+//        gStreamingGo1.render(
+//            X,
+//            Y,
+//            &clip,        // Vùng cắt cho sprite
+//            0,            // Góc xoay (không xoay)
+//            NULL,         // Không có điểm xoay
+//            SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
+//        );
+// }
+//
+
  bool init()
  {
  	//Initialization flag
@@ -1718,7 +1976,7 @@ void Character::free(){
 
  					//Handle input for the dot
  					gCharacter.handleEvent( e );
- 					if(gCharacter.isDead()){quit=true;}
+
  				}
  				//Calculate time step
 				float timeStep = stepTimer.getTicks() / 1000.f;
@@ -1745,6 +2003,7 @@ void Character::free(){
 
  				//Update scree
  				SDL_RenderPresent( gRenderer );
+ 				if(gCharacter.isDie()){quit=true;}
             }
 
  		//Free resources and close SDL
