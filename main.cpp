@@ -125,7 +125,7 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
 
     return true;
 }
-////////////
+
  //Texture wrapper class
  class LTexture
  {
@@ -199,6 +199,22 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
 
  };
 
+// Hàm kiểm tra khoảng cách giữa hai điểm (x1, y1) và (x2, y2) có nhỏ hơn d không
+int checkDistance(float x1, float y1, float x2, float y2, float d)
+{
+    // Tính khoảng cách giữa hai điểm
+    float distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+
+    // Kiểm tra nếu khoảng cách nhỏ hơn d
+    if (distance < d) {
+        return 1;  // Trả về 1 nếu khoảng cách nhỏ hơn d
+    } else {
+        return 0;  // Trả về 0 nếu khoảng cách không nhỏ hơn d
+    }
+}
+
+
+
 
  //The tile
  class Tile
@@ -242,8 +258,9 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
  		int getFrame(){return mFrame;}
  		int getCurrentImage(){return mCurrentImage;}
  		int getCurrentFrame(){return (int)mCurrentFrame;}
+ 		float FgetCurrentFrame(){return mCurrentFrame;}
  		void upCurrentFrame(int n ) {
-            // Tăng giá trị mCurrentFrame lên 0.2 và đảm bảo nó quay lại trong phạm vi [0, n)
+            // Tăng giá trị mCurrentFrame lên 0.1 và đảm bảo nó quay lại trong phạm vi [0, n)
             mCurrentFrame += 0.1;
 
             // Nếu mCurrentFrame vượt quá phạm vi, reset lại với phép toán modulo
@@ -302,17 +319,21 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
  		static const int DOT_HEIGHT = 20;
 
  		//Maximum axis velocity of the dot
- 		static const int DOT_VEL = 100;
+        int DOT_VEL = 100;
 
  		//Initializes the variables
  		Dot(int x=50,int y=50);
 
  		//Takes key presses and adjusts the dot's velocity
- 		void handleEvent( SDL_Event& e );
+ 		void handleEvent( SDL_Event& e,Dot* dotEnemy[], int numEnemies,int attackRange );
  		void AiHandleEvent( SDL_Event& e,Tile *tiles[] );
 
  		//Moves the dot and check collision against tiles
  		void move( Tile *tiles[], float timeStep );
+
+ 		void attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int attackRange=0);
+
+ 		void setVel(int Vel){DOT_VEL = Vel;}
 
  		//Centers the camera over the dot
  		void setCamera( SDL_Rect& camera );
@@ -322,6 +343,7 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
 
 
  		void SetDie(bool Die){die=Die;}
+ 		void SetAttack(bool Attack){attack=Attack;} void SetAttacking(bool Attacking){attacking=Attacking;}
  		//get HP
  		int getHP (){return mHP;}
 
@@ -330,6 +352,8 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
  		int GetY(){return mBox.y;}
 
  		int GetHP(){return mHP;}
+ 		void SetHP(int HP){mHP=HP;}
+ 		void SetDameSword (int dame){dameSword=dame;}
 
         // check direction
         bool isRight(){return goRight;}
@@ -341,6 +365,8 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
         bool isRun (){return run;}
         bool isDead(){return dead;}
         bool isDie (){return die;}
+        bool isAttack(){return attack;} bool isAttacking(){return attacking;}
+
 
      private:
  		//Collision box of the dot
@@ -357,7 +383,9 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
  	    bool goUp;
  	    bool goDown;
  	    bool touch;
+ 	    bool attack; bool attacking;
         int mHP;
+        int dameSword;
 
 
  };
@@ -367,7 +395,7 @@ class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure c
 { public:
     Character();
     bool loadMedia();
-    void handleEvent(SDL_Event& e);
+    void handleEvent(SDL_Event& e ,Dot* dotEnemy[]=nullptr, int numEnemies=0);
     void move(Tile* tiles[], float timeStep);
     void setCamera(SDL_Rect& camera);
     void render(SDL_Rect& camera);
@@ -387,6 +415,8 @@ class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure c
     int GetHP(){return dotCharacter.GetHP();};
     bool isDead(){return dotCharacter.isDead();}
     bool isDie(){return dotCharacter.isDie();}
+    bool isAttack(){return dotCharacter.isAttack();}
+    bool isAttacking(){return dotCharacter.isAttacking();}
 private:
 
      Dot dotCharacter;
@@ -398,11 +428,13 @@ private:
      LTexture gStreamingStand;
      LTexture gStreamingRun;
      LTexture gStreamingDie;
+     LTexture gStreamingAttack;
      //Animation stream
      DataStream gDataStreamGo;
      DataStream gDataStreamStand;
      DataStream gDataStreamRun;
      DataStream gDataStreamDie;
+     DataStream gDataStreamAttack;
 
 
 };
@@ -437,6 +469,7 @@ enum EnemyType {
     int GetHP(){return dotSlime.GetHP();};
     bool isDead(){return dotSlime.isDead();}
     bool isDie(){return dotSlime.isDie();}
+    Dot* GetDot(){return &dotSlime;}
 private:
 
      Dot dotSlime;
@@ -1071,11 +1104,13 @@ SDL_Color eHPColor {255,0,0};
     goUp =0;
     goDown = 0;
     touch=0;
+    attack=0;
     mHP=100;
+    dameSword=0;
 
  }
 
- void Dot::handleEvent( SDL_Event& e )
+ void Dot::handleEvent( SDL_Event& e ,Dot* dotEnemy[], int numEnemies, int attackRange)
  {
      //If a key was pressed
  	if( e.type == SDL_KEYDOWN && e.key.repeat == 0 )
@@ -1088,8 +1123,8 @@ SDL_Color eHPColor {255,0,0};
              case SDLK_LEFT: case SDLK_a : mVelX -= DOT_VEL; break;
              case SDLK_RIGHT: case SDLK_d : mVelX += DOT_VEL;  break;
              case SDLK_LSHIFT: run=1; break;
+             case SDLK_j: attack=1; break;
          }
-
 
      }
 
@@ -1104,19 +1139,27 @@ SDL_Color eHPColor {255,0,0};
              case SDLK_DOWN: case SDLK_s : mVelY -= DOT_VEL; break;
              case SDLK_LEFT: case SDLK_a : mVelX += DOT_VEL; break;
              case SDLK_RIGHT: case SDLK_d :  mVelX -= DOT_VEL; break;
+             case SDLK_j: attack=0;break;
          }
      }
 
-     if(mVelX!=0 || mVelY!=0){walk=1;}
-     else walk =0;
 
-     if(mVelX==0 && mVelY==0){}
-     else{goUp = 0;goDown =0; goRight=0; goLeft =0;
+      if(mVelX!=0 || mVelY!=0){walk=1;}
+      else walk =0;
+
+      if(mVelX==0 && mVelY==0){}
+      else{goUp = 0;goDown =0; goRight=0; goLeft =0;
       if(mVelX>0)goRight=1;
       else if(mVelX<0)goLeft=1;
       else if(mVelY<0)goUp=1;
       else goDown=1;}
 
+
+
+
+
+
+      attackEnemy(dotEnemy, numEnemies, attackRange);
  }
 
 void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
@@ -1183,11 +1226,13 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
 
 }
 
- void Dot::move( Tile *tiles[], float timeStep )
+void Dot::move( Tile *tiles[], float timeStep )
  {
+
      //Move the dot left or right
      float i=(isRun()?1.5:1);
-     int X= mVelX * timeStep *i;
+     float j=(isAttacking()?0.5:1); // nếu đang tấn công; tốc độ giảm đi
+     int X= mVelX * timeStep *i*j;
      mBox.x += X;
 
      //If the dot went too far to the left or right or touched a wall
@@ -1199,7 +1244,7 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
      }
 
      //Move the dot up or down
-     int Y=mVelY * timeStep *i;
+     int Y=mVelY * timeStep *i*j;
      mBox.y += Y;
 
      //If the dot went too far up or down or touched a wall
@@ -1212,6 +1257,21 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
       if(mHP<=0){dead=1; printf("dead \n");}
 
  }
+
+void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange) {
+        if (isAttacking() ) {
+            for (int i = 0; i < numEnemies; ++i) {
+
+                // Kiểm tra nếu kẻ thù nằm trong phạm vi tấn công
+                if (checkDistance((float)GetX(),(float)GetY(),(float)dotEnemy[i]->GetX(),(float)dotEnemy[i]->GetY(),attackRange)) {
+                    // Trừ máu kẻ thù (giảm HP)
+                    int newHP = dotEnemy[i]->GetHP() - 10;  // Giảm 10 HP mỗi lần tấn công (có thể thay đổi)
+                    dotEnemy[i]->SetHP(newHP);
+                    printf("Enemy at (%d, %d) took damage! New HP: %d\n", dotEnemy[i]->GetX(), dotEnemy[i]->GetY(), newHP);
+                }
+            }
+        }
+    }
 
  void Dot::setCamera( SDL_Rect& camera )
  {
@@ -1247,7 +1307,10 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
  //////////////////
  // Character methods
 Character::Character()
-    : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1){}
+    : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1), gDataStreamAttack(1){
+    dotCharacter.SetHP(200);
+    dotCharacter.SetDameSword(50);
+    }
 
 bool Character::loadMedia() {
     //Loading success flag
@@ -1284,6 +1347,11 @@ bool Character::loadMedia() {
     if( !gStreamingDie.createBlank( 560, 320 ) )
     {
         printf( "Failed to create streamingDie texture!\n" );
+        success = false;
+    }
+    if( !gStreamingAttack.createBlank( 640, 320 ) )
+    {
+        printf( "Failed to create streamingAttack texture!\n" );
         success = false;
     }
 
@@ -1334,14 +1402,25 @@ bool Character::loadMedia() {
         gStreamingDie.copyRawPixels32(gDataStreamDie.getBuffer());
         gStreamingDie.unlockTexture();
     }
+    if( !gDataStreamAttack.loadMedia("image/character/Sword_Attack_full_") )
+    {
+        printf( "Unable to load data streamAttack!\n" );
+        success = false;
+
+    }
+    else{
+        gStreamingAttack.lockTexture();
+        gStreamingAttack.copyRawPixels32(gDataStreamAttack.getBuffer());
+        gStreamingAttack.unlockTexture();
+    }
 
 
 
  	return success;
 }
 
-void Character::handleEvent(SDL_Event& e) {
-    dotCharacter.handleEvent(e);
+void Character::handleEvent(SDL_Event& e,Dot* dotEnemy[], int numEnemies) {
+    dotCharacter.handleEvent(e,dotEnemy,numEnemies,50);
 }
 
 
@@ -1361,6 +1440,19 @@ void Character::setCamera(SDL_Rect& camera) {
 }
 
 void Character::render(SDL_Rect& camera) {
+
+//    static Uint32 lastRenderTime = SDL_GetTicks();  // Thời gian lần render cuối cùng
+//    Uint32 currentTime = SDL_GetTicks();
+//    float timeStep = (currentTime - lastRenderTime) / 1000.0f;  // Tính toán thời gian giữa các frame
+//
+//    if(timeStep < 0.01f) return;  // Nếu thời gian quá ngắn, không render, giúp không quá nhanh
+//
+//    lastRenderTime = currentTime;  // Cập nhật thời gian render
+
+
+
+    if(isAttack()) {dotCharacter.SetAttacking(1);}
+
     int X=dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - 40 - camera.x;
     int Y=dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y;
     int Frame;
@@ -1385,7 +1477,7 @@ void Character::render(SDL_Rect& camera) {
         // Cập nhật frame hoạt ảnh "die" (di chuyển)
         Frame=16;
         gDataStreamDie.upCurrentFrame(Frame);
-        if(gDataStreamDie.getCurrentFrame()==15){dotCharacter.SetDie(1);printf("died \n");}
+        if(gDataStreamDie.FgetCurrentFrame()>=Frame-0.2){dotCharacter.SetDie(1);printf("died \n");}
         // Tính toán vị trí clip cho sprite
         int x = (gDataStreamDie.getCurrentFrame() % Frame)/2;  // Tính x từ mCurrentFrame (số cột)
         int y = gDataStreamDie.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
@@ -1404,6 +1496,26 @@ void Character::render(SDL_Rect& camera) {
             SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
         );
 
+    }
+    else if(isAttacking()){
+
+
+        Frame=8;
+        gDataStreamAttack.upCurrentFrame(Frame);printf("%f\n",gDataStreamAttack.FgetCurrentFrame());
+         if(gDataStreamAttack.FgetCurrentFrame()>=Frame-0.2) {dotCharacter.SetAttacking(isAttack());printf("Attacked \n");}
+        int x = gDataStreamAttack.getCurrentFrame()%Frame;
+        int y = gDataStreamAttack.getCurrentFrame() / Frame +i;
+
+        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
+
+        gStreamingAttack.render(
+            X,
+            Y+5,
+            &clip,
+            0,
+            NULL,
+            SDL_FLIP_NONE
+        );
     }
 
      else if(dotCharacter.isRun() && dotCharacter.isWalk()){
@@ -1491,6 +1603,7 @@ void Character::setBlendMode(SDL_BlendMode blending){
     gStreamingStand.setBlendMode(blending);
     gStreamingRun.setBlendMode(blending);
     gStreamingDie.setBlendMode(blending);
+    gStreamingAttack.setBlendMode(blending);
 }
 
 void Character::free(){
@@ -1501,12 +1614,14 @@ void Character::free(){
      gStreamingGo.free();
      gStreamingStand.free();
      gStreamingRun.free();
-      gStreamingDie.free();
+     gStreamingDie.free();
+     gStreamingAttack.free();
      //Animation stream
      gDataStreamGo.free();
      gDataStreamStand.free();
      gDataStreamRun.free();
      gDataStreamDie.free();
+     gDataStreamAttack.free();
 
 }
 
@@ -2025,6 +2140,9 @@ void slime::free(){
  			slime Slime1(200,50);
  			Slime1.loadMedia();
 
+ 			Dot* dotEnemy[1];
+ 			dotEnemy[0]=Slime1.GetDot();
+
  			//While application is running
  			while( !quit )
  			{
@@ -2038,7 +2156,7 @@ void slime::free(){
  					}
 
  					//Handle input for the dot
- 					gCharacter.handleEvent( e );
+ 					gCharacter.handleEvent( e,dotEnemy,1 );
 
  				}
  				//Calculate time step
@@ -2070,7 +2188,7 @@ void slime::free(){
 
  				//Update scree
  				SDL_RenderPresent( gRenderer );
- 				if(gCharacter.isDie()){quit=true;}
+ 				if(gCharacter.isDie()||Slime1.isDie()){quit=true;}
             }
 
  		//Free resources and close SDL
