@@ -218,7 +218,7 @@
  		int getFrame(){return mFrame;}
  		int getCurrentImage(){return mCurrentImage;}
  		int getCurrentFrame(){return (int)mCurrentFrame;}
- 		void upCurrentFrame(int n ) {
+ 		void upCurrentFrame(int n = 6) {
             // Tăng giá trị mCurrentFrame lên 0.2 và đảm bảo nó quay lại trong phạm vi [0, n)
             mCurrentFrame += 0.1;
 
@@ -309,7 +309,6 @@
 
         bool isWalk (){return walk;}
         bool isRun (){return run;}
-        bool isDie (){return die;}
      private:
  		//Collision box of the dot
  		SDL_Rect mBox;
@@ -318,7 +317,6 @@
 
  		//The velocity of the dot
  		int mVelX, mVelY;
- 		bool die;
         bool run;
  		bool walk;
  		bool goRight;
@@ -361,14 +359,11 @@ private:
      LTexture gStreamingGo;
      LTexture gStreamingStand;
      LTexture gStreamingRun;
-     LTexture gStreamingDie;
      //Animation stream
      DataStream gDataStreamGo;
      DataStream gDataStreamStand;
      DataStream gDataStreamRun;
-      DataStream gDataStreamDie;
        bool dead;
-       bool died;
        int mHP;
 
 };
@@ -979,7 +974,6 @@ SDL_Color HPColor {0,100,255};
      mHP=100;
     walk=0;
     run=0;
-    die=0;
     goRight = 1;
     goLeft = 0;
     goUp =0;
@@ -1093,7 +1087,7 @@ SDL_Color HPColor {0,100,255};
  //////////////////
  // Character methods
 Character::Character()
-    : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1), dead(false), died(false), mHP(100) {}
+    : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), dead(false), mHP(100) {}
 
 bool Character::loadMedia() {
     //Loading success flag
@@ -1127,12 +1121,6 @@ bool Character::loadMedia() {
             printf( "Failed to create streamingRun texture!\n" );
             success = false;
         }
-    if( !gStreamingDie.createBlank( 560, 320 ) )
-    {
-        printf( "Failed to create streamingDie texture!\n" );
-        success = false;
-    }
-
 
  	//Load data stream
  	if( !gDataStreamGo.loadMedia("image/character/Walk_full_") )
@@ -1146,16 +1134,10 @@ bool Character::loadMedia() {
  		success = false;
  	}
     if( !gDataStreamRun.loadMedia("image/character/Sword_Run_full_") )
-    {
-        printf( "Unable to load data streamRun!\n" );
-        success = false;
-    }
-    if( !gDataStreamDie.loadMedia("image/character/Sword_Death_full_") )
-    {
-        printf( "Unable to load data streamDie!\n" );
-        success = false;
-    }
-
+        {
+            printf( "Unable to load data streamRun!\n" );
+            success = false;
+        }
 
 
  	return success;
@@ -1183,14 +1165,10 @@ void Character::setCamera(SDL_Rect& camera) {
 }
 
 void Character::render(SDL_Rect& camera) {
-    int X=dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - 40 - camera.x;
-    int Y=dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y;
-    int Frame;
-
-    mName.render(X + 40 - mName.getWidth() / 2 ,
-                             Y);
-    HP.render(X + 40 - HP.getWidth() / 2 ,
-                             Y+15);
+    mName.render(dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - mName.getWidth() / 2 - camera.x,
+                             dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80  - camera.y);
+    HP.render(dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - HP.getWidth() / 2 - camera.x,
+                             dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 20 - camera.y);
 
 
                 int i;
@@ -1209,11 +1187,11 @@ void Character::render(SDL_Rect& camera) {
         gStreamingRun.unlockTexture();
 
         // Cập nhật frame hoạt ảnh "go" (di chuyển)
-        Frame=8;
+        int Frame=8;
         gDataStreamRun.upCurrentFrame(Frame);
 
         // Tính toán vị trí clip cho sprite
-        int x = gDataStreamRun.getCurrentFrame();  // Tính x từ mCurrentFrame (số cột)
+        int x = gDataStreamRun.getCurrentFrame() % Frame;  // Tính x từ mCurrentFrame (số cột)
         int y = gDataStreamRun.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
@@ -1221,8 +1199,8 @@ void Character::render(SDL_Rect& camera) {
 
         // Vẽ sprite với camera offset
         gStreamingRun.render(
-            X,
-            Y,
+            dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - 40 - camera.x,
+            dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y,
             &clip,        // Vùng cắt cho sprite
             0,            // Góc xoay (không xoay)
             NULL,         // Không có điểm xoay
@@ -1236,12 +1214,11 @@ void Character::render(SDL_Rect& camera) {
         gStreamingGo.unlockTexture();
 
         // Cập nhật frame hoạt ảnh "go" (di chuyển)
-        Frame=6;
-        gDataStreamGo.upCurrentFrame(Frame);
+        gDataStreamGo.upCurrentFrame(6);
 
         // Tính toán vị trí clip cho sprite
-        int x = gDataStreamGo.getCurrentFrame() ;  // Tính x từ mCurrentFrame (số cột)
-        int y = gDataStreamGo.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
+        int x = gDataStreamGo.getCurrentFrame() % 6;  // Tính x từ mCurrentFrame (số cột)
+        int y = gDataStreamGo.getCurrentFrame() / 6 +i;  // Tính y từ mCurrentFrame (số dòng)
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
         SDL_Rect clip = { x * 80, y * 80, 80, 80 };
@@ -1249,41 +1226,13 @@ void Character::render(SDL_Rect& camera) {
 
         // Vẽ sprite với camera offset
         gStreamingGo.render(
-            X,
-            Y,
+            dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - 40 - camera.x,
+            dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y,
             &clip,        // Vùng cắt cho sprite
             0,            // Góc xoay (không xoay)
             NULL,         // Không có điểm xoay
             SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
         );
-    }
-    else if(dotCharacter.isDie()){
-         gStreamingDie.lockTexture();
-        gStreamingDie.copyRawPixels32(gDataStreamDie.getBuffer());
-        gStreamingDie.unlockTexture();
-
-        // Cập nhật frame hoạt ảnh "die" (di chuyển)
-        Frame=8;
-        gDataStreamGo.upCurrentFrame(Frame);
-        //if(Frame==9)
-        // Tính toán vị trí clip cho sprite
-        int x = gDataStreamGo.getCurrentFrame() % Frame;  // Tính x từ mCurrentFrame (số cột)
-        int y = gDataStreamGo.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
-
-        // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
-        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
-
-
-        // Vẽ sprite với camera offset
-        gStreamingGo.render(
-            X,
-            Y,
-            &clip,        // Vùng cắt cho sprite
-            0,            // Góc xoay (không xoay)
-            NULL,         // Không có điểm xoay
-            SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
-        );
-
     }
      else {
         // Nếu không đi, render đứng yên
@@ -1292,11 +1241,11 @@ void Character::render(SDL_Rect& camera) {
         gStreamingStand.unlockTexture();
 
         // Cập nhật frame hoạt ảnh "go" (di chuyển)
-        Frame=((dotCharacter.isUp())? 4:12);
+        int Frame=((dotCharacter.isUp())? 4:12);
         gDataStreamStand.upCurrentFrame(Frame);
 
         // Tính toán vị trí clip cho sprite
-        int x = gDataStreamStand.getCurrentFrame() ;  // Tính x từ mCurrentFrame (số cột)
+        int x = gDataStreamStand.getCurrentFrame() % Frame;  // Tính x từ mCurrentFrame (số cột)
         int y = gDataStreamStand.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
@@ -1304,8 +1253,8 @@ void Character::render(SDL_Rect& camera) {
 
         // Vẽ sprite với camera offset
         gStreamingStand.render(
-            X,
-            Y,
+            dotCharacter.GetX() + dotCharacter.DOT_WIDTH / 2 - 40 - camera.x,
+            dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y,
             &clip,        // Vùng cắt cho sprite
             0,            // Góc xoay (không xoay)
             NULL,         // Không có điểm xoay
