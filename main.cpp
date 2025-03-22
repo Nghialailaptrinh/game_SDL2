@@ -4,6 +4,7 @@
  #include <SDL.h>
  #include <SDL_image.h>
  #include <SDL_ttf.h>
+ #include <SDL_mixer.h>
  #include <stdio.h>
  #include <string>
  #include <fstream>
@@ -16,14 +17,18 @@
  const int SCREEN_HEIGHT = 500;
 
  //The dimensions of the level
- const int LEVEL_WIDTH = 5120;
- const int LEVEL_HEIGHT = 3840;
+ const int LEVEL_WIDTH = 1280;
+ const int LEVEL_HEIGHT = 960;
 
  //Tile constants
  const int TILE_WIDTH = 80;
  const int TILE_HEIGHT = 80;
- const int TOTAL_TILES = 3072;
+ const int TOTAL_TILES = 192;
  const int TOTAL_TILE_SPRITES = 12;
+
+  // Store the frame rate target
+ const int FPS = 40;
+ const int frameDelay = 1000 / FPS;  // Delay per frame to reach 40 FPS (in milliseconds)
 
  //The different tile sprites
  const int TILE_RED = 0;
@@ -141,6 +146,27 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
     }
 }
 
+int checkDiRect(float x1, float y1, float x2, float y2) {
+    float diffX = x2 - x1;
+    float diffY = y2 - y1;
+
+    // So sánh hiệu x và y, chọn hướng dựa trên giá trị tuyệt đối lớn hơn
+    if (fabs(diffX) > fabs(diffY)) {
+        if (diffX > 0) {
+            return 0; // Điểm 2 ở bên phải điểm 1
+        } else {
+            return 2; // Điểm 2 ở bên trái điểm 1
+        }
+    } else {
+        if (diffY > 0) {
+            return 3; // Điểm 2 ở trên điểm 1
+        } else {
+            return 1; // Điểm 2 ở dưới điểm 1
+        }
+    }
+}
+
+
 
 
 
@@ -156,13 +182,13 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
  	~LTexture();
 
  	//Loads image at specified path
- 	bool loadFromFile( std::string path );
+ 	bool loadFromFile( std::string path, Uint8 red=0, Uint8 green=255, Uint8 blue=0 );
 
  	//Loads image into pixel buffer
  	bool loadPixelsFromFile( std::string path );
 
  	//Creates image from preloaded pixels
- 	bool loadFromPixels();
+ 	bool loadFromPixels(  Uint8 red, Uint8 green, Uint8 blue);
 
  #if defined(SDL_TTF_MAJOR_VERSION)
  	//Creates image from font string
@@ -356,6 +382,7 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
  		// Get x,y
  		int GetX(){return mBox.x;}
  		int GetY(){return mBox.y;}
+ 		int GetDameSword(){return dameSword;}
 
  		int GetHP(){return mHP;}
  		int GetMaxHP(){return maxHP;}
@@ -382,6 +409,7 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
 
  		//The velocity of the dot
  		int mVelX, mVelY;
+ 		int lastDirection ; // Biến lưu hướng di chuyển trước đó (0: right, 1: up, 2: left, 3: down)
  		bool die;
  		bool dead;
         bool run;
@@ -430,6 +458,7 @@ class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure c
     bool isDie(){return dotCharacter.isDie();}
     bool isAttack(){return dotCharacter.isAttack();}
     bool isAttacking(){return dotCharacter.isAttacking();}
+    Dot* GetDot(){return &dotCharacter;}
 private:
 
      Dot dotCharacter;
@@ -451,14 +480,6 @@ private:
      DataStream gDataStreamAttack;
 
 
-};
-
-
-enum EnemyType {
-    Slime = 1,
-    Goblin = 2,
-    Wolve = 3,
-    Bee = 4
 };
 
 
@@ -529,6 +550,7 @@ private:
  TTF_Font* gFont = NULL;
 
 Character gCharacter;
+//slime[10]
 SDL_Color nameColor {0,0,255};
 SDL_Color HPColor {0,100,255};
 SDL_Color eHPColor {255,0,0};
@@ -536,8 +558,18 @@ SDL_Color eHPColor {255,0,0};
  //Scene textures
  LTexture gDotTexture; //thuận tiện test thay vì dùng hoạt ảnh
  LTexture gTileTexture;
- LTexture gOverTexture; // kết thúc;
+ LTexture gPauseTexture; // kết thúc;
+ LTexture gPassTexture;
+
+ LTexture gRainTexture; // thời tiết;
+
  SDL_Rect gTileClips[ TOTAL_TILE_SPRITES ];
+
+ //audio
+ Mix_Music *gGo= NULL;
+ Mix_Music *gRun = NULL;
+ Mix_Chunk *gRain = NULL;
+ Mix_Chunk *gSword = NULL;
 
 
  //////////////
@@ -559,7 +591,7 @@ SDL_Color eHPColor {255,0,0};
  	free();
  }
 
- bool LTexture::loadFromFile( std::string path )
+ bool LTexture::loadFromFile( std::string path, Uint8 red, Uint8 green, Uint8 blue )
  {
  	//Load pixels
  	if( !loadPixelsFromFile( path ) )
@@ -569,7 +601,7 @@ SDL_Color eHPColor {255,0,0};
  	else
  	{
  		//Load texture from pixels
- 		if( !loadFromPixels() )
+ 		if( !loadFromPixels(  red, green, blue) )
  		{
  			printf( "Failed to texture from pixels from %s!\n", path.c_str() );
  		}
@@ -612,7 +644,7 @@ SDL_Color eHPColor {255,0,0};
  	return mSurfacePixels != NULL;
  }
 
- bool LTexture::loadFromPixels()
+ bool LTexture::loadFromPixels( Uint8 red, Uint8 green, Uint8 blue)
  {
  	//Only load if pixels exist
  	if( mSurfacePixels == NULL )
@@ -622,7 +654,7 @@ SDL_Color eHPColor {255,0,0};
  	else
  	{
  		//Color key image
- 		SDL_SetColorKey( mSurfacePixels, SDL_TRUE, SDL_MapRGB( mSurfacePixels->format, 0, 0xFF, 0) );
+ 		SDL_SetColorKey( mSurfacePixels, SDL_TRUE, SDL_MapRGB( mSurfacePixels->format, red, green, blue) );
 
  		//Create texture from surface pixels
  		mTexture = SDL_CreateTextureFromSurface( gRenderer, mSurfacePixels );
@@ -1109,7 +1141,7 @@ SDL_Color eHPColor {255,0,0};
      //Initialize the velocity
      mVelX = 0;
      mVelY = 0;
-     mHP=100;
+     lastDirection=rand()%3;
     walk=0;
     run=0;
     die=0;
@@ -1174,8 +1206,6 @@ SDL_Color eHPColor {255,0,0};
  }
 
 void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
-    static int lastDirection = 0;  // Biến lưu hướng di chuyển trước đó (0: right, 1: up, 2: left, 3: down)
-
     // Mã hóa quặt
     int moveCode = rand() % 200;  // Giả sử mã hóa từ 0 đến 11 (tùy theo yêu cầu)
 
@@ -1275,10 +1305,13 @@ void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
 
                 // Kiểm tra nếu kẻ thù nằm trong phạm vi tấn công
                 if (checkDistance((float)GetX(),(float)GetY(),(float)dotEnemy[i]->GetX(),(float)dotEnemy[i]->GetY(),attackRange)) {
+                        int diRect=checkDiRect((float)GetX(),(float)GetY(),(float)dotEnemy[i]->GetX(),(float)dotEnemy[i]->GetY());
                     // Trừ máu kẻ thù (giảm HP)
+
+                    if( (goRight&&(diRect==0))||(goUp&&(diRect==1))||(goLeft&&(diRect==2))||(goRight==0&&goLeft==0&&goUp==0&&diRect==3)){
                     int newHP = dotEnemy[i]->GetHP() - dameSword;
                     dotEnemy[i]->SetHP((newHP>0)?newHP:0);
-                    printf("Enemy at (%d, %d) took damage! New HP: %d\n", dotEnemy[i]->GetX(), dotEnemy[i]->GetY(), newHP);
+                    }
                 }
             }
         }
@@ -1321,7 +1354,7 @@ Character::Character()
     : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1), gDataStreamAttack(1){
     dotCharacter.SetMaxHP(200);
     dotCharacter.SetHP(dotCharacter.GetMaxHP());
-    dotCharacter.SetDameSword(50);
+    dotCharacter.SetDameSword(20);
     dotCharacter.setVel(150);
     }
 
@@ -1442,8 +1475,9 @@ void Character::handleEvent(SDL_Event& e) {
 }
 
 void Character::attackEnemy(Dot* dotEnemy[], int numEnemies,  int weapon){
-   int attackRange=50;
+   int attackRange=70;
 dotCharacter.attackEnemy(dotEnemy,numEnemies,attackRange,gDataStreamAttack.FgetCurrentFrame()>=5.9&&gDataStreamAttack.FgetCurrentFrame()<=6);
+if(gDataStreamAttack.FgetCurrentFrame()>=2.9&&gDataStreamAttack.FgetCurrentFrame()<=3)Mix_PlayChannel(-1,gSword,0);
 }
 
 
@@ -1456,6 +1490,35 @@ void Character::move(Tile* tiles[], float timeStep) {
  	{
  		printf( "Failed to create HP texture!\n" );
  	}
+
+ 	 static bool isRunMusicPlaying =false,isWalkMusicPlaying = false;
+        if (dotCharacter.isRun() && dotCharacter.isWalk()) {
+            // Nếu nhạc không đang phát, hoặc đang phát nhạc đi bộ, ta chuyển sang nhạc chạy
+            if (Mix_PlayingMusic() == 0 || (Mix_PlayingMusic() && !isRunMusicPlaying)) {
+                Mix_PlayMusic(gRun, -1);  // Phát nhạc chạy liên tục (-1 cho số lần lặp lại)
+                isRunMusicPlaying = true; // Đánh dấu nhạc chạy đang phát
+                isWalkMusicPlaying = false; // Đánh dấu nhạc đi bộ không còn phát
+            }
+        }
+        // Nếu chỉ đi bộ, phát nhạc đi bộ
+        else if (dotCharacter.isWalk()) {
+            // Nếu nhạc không đang phát, hoặc đang phát nhạc chạy thì chuyển sang nhạc đi bộ
+            if (Mix_PlayingMusic() == 0 || (Mix_PlayingMusic() && isRunMusicPlaying)) {
+                Mix_PlayMusic(gGo, -1);  // Phát nhạc đi bộ
+                isRunMusicPlaying = false; // Đánh dấu nhạc chạy không còn phát
+                isWalkMusicPlaying = true; // Đánh dấu nhạc đi bộ đang phát
+            }
+        }
+        // Nếu không di chuyển, dừng nhạc
+        else {
+            if (Mix_PlayingMusic() != 0) {
+                Mix_HaltMusic();  // Dừng nhạc nếu không di chuyển
+                isRunMusicPlaying = false; // Đánh dấu nhạc chạy không còn phát
+                isWalkMusicPlaying = false; // Đánh dấu nhạc đi bộ không còn phát
+            }
+}
+
+
 }
 
 void Character::setCamera(SDL_Rect& camera) {
@@ -1463,16 +1526,6 @@ void Character::setCamera(SDL_Rect& camera) {
 }
 
 void Character::render(SDL_Rect& camera) {
-
-//    static Uint32 lastRenderTime = SDL_GetTicks();  // Thời gian lần render cuối cùng
-//    Uint32 currentTime = SDL_GetTicks();
-//    float timeStep = (currentTime - lastRenderTime) / 1000.0f;  // Tính toán thời gian giữa các frame
-//
-//    if(timeStep < 0.01f) return;  // Nếu thời gian quá ngắn, không render, giúp không quá nhanh
-//
-//    lastRenderTime = currentTime;  // Cập nhật thời gian render
-
-
 
     if(isAttack()) {dotCharacter.SetAttacking(1);}
 
@@ -1482,9 +1535,9 @@ void Character::render(SDL_Rect& camera) {
 
     mName.render(X + 40 - mName.getWidth() / 2  ,
                              Y);
-    HP.render(X + 40 - HP.getWidth() / 2 -HPTexture.getWidth(),Y+15);
+    HP.render(X + 40 - HP.getWidth() / 2 -HPTexture.getWidth()+ 20,Y+15);
 
-    printf("%d",HPTexture.getWidth());
+
     int hp;
     if(GetHP()<=dotCharacter.GetMaxHP()*1.0/8)hp=0;
     else if(GetHP()<=dotCharacter.GetMaxHP()*2*1.0/8)hp=1;
@@ -1657,7 +1710,7 @@ void Character::free(){
 
 /////////////////
 
-slime::slime(int x,int y): dotSlime(x,y){ }
+slime::slime(int x,int y): dotSlime(x,y){dotSlime.setVel(100); }
 
 bool slime::loadMedia(){
     bool success = true;
@@ -1700,22 +1753,23 @@ dotSlime.AiHandleEvent(e,tiles);
 void slime::render(SDL_Rect& camera){
     int width=50;
     int X=dotSlime.GetX() + dotSlime.DOT_WIDTH / 2 - width/2 - camera.x;
-    int Y=dotSlime.GetY() + dotSlime.DOT_HEIGHT - width  - camera.y;
+    int Y=dotSlime.GetY() + dotSlime.DOT_HEIGHT - width  - camera.y +5;
     int Frame;
 
-    mName.render(X + width/2 - mName.getWidth() / 2 ,
-                             Y-25);
+    if((!isDead())&&checkDistance(dotSlime.GetX(),dotSlime.GetY(),gCharacter.GetDot()->GetX(),gCharacter.GetDot()->GetY(),150)){
+        mName.render(X + width/2 - mName.getWidth() / 2 ,
+                                 Y-25);
 
-    std::stringstream path;                                         // load lại HP cho Sllime
-        path << (GetHP()) << "/100";
-        if( !HP.loadFromRenderedText(path.str(),eHPColor) )
- 	{
- 		printf( "Failed to create HP texture!\n" );
- 	}
-    HP.render(X + width/2 - HP.getWidth() / 2 ,
-                             Y-15);
+        std::stringstream path;                                         // load lại HP cho Sllime
+            path << (GetHP()) << "/100";
+            if( !HP.loadFromRenderedText(path.str(),eHPColor) )
+        {
+            printf( "Failed to create HP texture!\n" );
+        }
+        HP.render(X + width/2 - HP.getWidth() / 2 ,
+                                 Y-15);
 
-
+    }
                 int i;
                 if(dotSlime.isRight()) i=2;
                 else if(dotSlime.isLeft()) i=1;
@@ -1799,7 +1853,7 @@ void slime::free(){
  	bool success = true;
 
  	//Initialize SDL
- 	if( SDL_Init( SDL_INIT_VIDEO ) < 0 )
+ 	if( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0 )
  	{
  		printf( "SDL could not initialize! SDL Error: %s\n", SDL_GetError() );
  		success = false;
@@ -1846,6 +1900,18 @@ void slime::free(){
 					printf( "SDL_ttf could not initialize! SDL_ttf Error: %s\n", TTF_GetError() );
 					success = false;
 				}
+				//Initialize SDL_mixer
+				int flags = MIX_INIT_MP3;
+                if ((Mix_Init(flags) & flags) != flags) {
+                    printf("Mix_Init failed: %s\n", Mix_GetError());
+                    SDL_Quit();
+                    return false;
+                }
+				if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 2048 ) < 0 )
+				{
+					printf( "SDL_mixer could not initialize! SDL_mixer Error: %s\n", Mix_GetError() );
+					success = false;
+				}
  			}
  		}
  	}
@@ -1859,7 +1925,7 @@ void slime::free(){
  	bool success = true;
 
  	//Open the font
-	gFont = TTF_OpenFont( "font/lazy.ttf", 12 );
+	gFont = TTF_OpenFont( "font/VNLUCIDA.TTF", 12 );
 	if( gFont == NULL )
 	{
 		printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
@@ -1872,6 +1938,30 @@ void slime::free(){
  		printf( "Failed to load dot texture!\n" );
  		success = false;
  	}
+ 	if( !gPauseTexture.loadFromFile( "image/Game_Pause.png" ) )
+ 	{
+ 		printf( "Failed to load tile Pause texture!\n" );
+ 		success = false;
+ 	}
+ 	if( !gPassTexture.loadFromFile( "image/Game_Pass.png" ) )
+ 	{
+ 		printf( "Failed to load tile Pass texture!\n" );
+ 		success = false;
+ 	}
+ 	else{
+        gPassTexture.setBlendMode(SDL_BLENDMODE_BLEND);
+        gPassTexture.setAlpha(0);
+ 	}
+ 	if( !gRainTexture.loadFromFile( "image/rain.png" ,255,255,255) )
+ 	{
+ 		printf( "Failed to load tile rain texture!\n" );
+ 		success = false;
+ 	}
+ 	else{
+        gRainTexture.setBlendMode(SDL_BLENDMODE_BLEND);
+        gRainTexture.setAlpha(0);
+ 	}
+
 
  	//Load dot Charracter & enemy
  	if( !gCharacter.loadMedia() )
@@ -1894,6 +1984,32 @@ void slime::free(){
  		success = false;
  	}
 
+ 	gGo = Mix_LoadMUS( "audio/go.mp3" );
+	if( gGo == NULL )
+	{
+		printf( "Failed to load go music! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+	gRun = Mix_LoadMUS( "audio/run.mp3" );
+	if( gRun == NULL )
+	{
+		printf( "Failed to load run music! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+	gRain = Mix_LoadWAV( "audio/rain.mp3" );
+	if( gRun == NULL )
+	{
+		printf( "Failed to load rain music! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+	gSword = Mix_LoadWAV( "audio/sword_attack.mp3" );
+	if( gSword == NULL )
+	{
+		printf( "Failed to load sword sound effect! SDL_mixer Error: %s\n", Mix_GetError() );
+		success = false;
+	}
+
+
  	return success;
  }
 
@@ -1912,7 +2028,9 @@ void slime::free(){
  	//Free loaded images
  	gDotTexture.free();
  	gTileTexture.free();
-
+    gPauseTexture.free();
+    gPassTexture.free();
+    gRainTexture.free();
  	gCharacter.free();
 
  	//Destroy window
@@ -1925,7 +2043,19 @@ void slime::free(){
 	TTF_CloseFont( gFont );
 	gFont = NULL;
 
+	Mix_FreeChunk(gSword);
+	Mix_FreeChunk(gRain);
+	gSword=NULL;
+    gRain=NULL;
+    Mix_FreeMusic(gRun);
+    Mix_FreeMusic(gGo);
+
+    gRun=NULL;
+    gGo=NULL;
+
+
  	//Quit SDL subsystems
+ 	Mix_Quit();
  	TTF_Quit();
  	IMG_Quit();
  	SDL_Quit();
@@ -1985,7 +2115,7 @@ void slime::free(){
      int x = 0, y = 0;
 
      //Open the map
-     std::ifstream map( "map/lazy.map" );
+     std::ifstream map( "map/map1.map" );
 
      //If the map couldn't be loaded
      if( map.fail() )
@@ -2133,99 +2263,230 @@ void slime::free(){
      return false;
  }
 
- int main( int argc, char* args[] )
- {
-    srand(static_cast<unsigned int>(time(0)));
+ bool handleEvent(SDL_Event &e, Character &character,  bool &quit) {        // ta dùng bool để check xem sự kiện có phải sự kiện thóat không
+    static bool waitingForQuit = false;
+    // Xử lý sự kiện của Character
+    character.handleEvent(e);
 
- 	//Start up SDL and create window
- 	if( !init() )
- 	{
- 		printf( "Failed to initialize!\n" );
- 	}
- 	else
- 	{
- 		//The level tiles
- 		Tile* tileSet[ TOTAL_TILES ];
+    // Xử lý sự kiện thoát
+    if (e.type == SDL_QUIT) {
+        waitingForQuit = true;
+    }
 
- 		//Load media
- 		if( !loadMedia( tileSet ) )
- 		{
- 			printf( "Failed to load media!\n" );
- 		}
- 		else
- 		{
- 			//Main loop flag
- 			bool quit = false;
-
- 			//Event handler
- 			SDL_Event e;
-
- 			//Keeps track of time between steps
-			LTimer stepTimer;
-
- 			//Level camera
- 			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
-
- 			slime Slime1(200,200);
- 			Slime1.loadMedia();
-
- 			Dot* dotEnemy[1];
- 			dotEnemy[0]=Slime1.GetDot();
-
- 			//While application is running
- 			while( !quit )
- 			{
- 				//Handle events on queue
- 				while( SDL_PollEvent( &e ) != 0 )
- 				{
- 					//User requests quit
- 					if( e.type == SDL_QUIT )
- 					{
- 						quit = true;
- 					}
-
- 					//Handle input for the dot
- 					gCharacter.handleEvent( e);
-
- 				}
- 				//Calculate time step
-				float timeStep = stepTimer.getTicks() / 1000.f;
-
- 				//Move the character
- 				gCharacter.move(tileSet,timeStep);
- 				gCharacter.attackEnemy(dotEnemy,1,1);
-
- 				//Restart step timer
-				stepTimer.start();
- 				gCharacter.setCamera( camera );
-
-                Slime1.AiHandleEvent(e,tileSet);
-                Slime1.setBlendMode(SDL_BLENDMODE_BLEND);
-
-                gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
- 				SDL_SetRenderDrawColor( gRenderer, 0xFF, 0xFF, 0xFF, 0xFF );
- 				SDL_RenderClear( gRenderer );
-
- 				//Render level
- 				for( int i = 0; i < TOTAL_TILES; ++i )
- 				{
- 					tileSet[ i ]->render( camera );
- 				}
-
-                Slime1.render(camera);
-                gCharacter.render(camera);
-
-
- 				//Update scree
- 				SDL_RenderPresent( gRenderer );
- 				if(gCharacter.isDie()||Slime1.isDie()){quit=true;}
+    if (waitingForQuit) {
+        if (e.type == SDL_KEYDOWN) {
+            if (e.key.keysym.sym == SDLK_y) {
+                printf("Exiting game...\n");
+                quit = true;
+            } else if (e.key.keysym.sym == SDLK_n) {
+                printf("Returning to game...\n");
+                waitingForQuit = false;
             }
-
- 		//Free resources and close SDL
-
- 		Slime1.free();
- 		close( tileSet );
         }
     }
- 	return 0;
- }
+    return waitingForQuit;
+}
+
+ bool renderPass(Dot* dotEnemy[], int numEnemies) {
+    bool render = true;
+
+    // Kiểm tra xem có kẻ địch nào còn sống không
+    for (int i = 0; i < numEnemies; i++) {
+        if (dotEnemy[i]->isDie() != 1) {
+            render = false;
+            break;
+        }
+    }
+
+    if (render) {
+        gPassTexture.render(0, 0);
+
+    }
+
+    return render;
+}
+
+slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& dotSlime) { // tạo mảng slime và mảng dot cảu nó
+    std::ifstream file(filename); // Mở file
+    if (!file) {
+       printf("Failed to open the file!\n");
+        return nullptr;
+    }
+
+    // Đọc số lượng slime
+    file >> numSlime;
+
+    // Tạo mảng chứa các con trỏ slime* và mảng chứa Dot* cho slime
+    slime** Slime = new slime*[numSlime];
+    dotSlime = new Dot*[numSlime];  // Cấp phát mảng Dot* tương ứng
+
+    // Đọc vị trí của các slime từ file và tạo các đối tượng slime
+    int x, y;
+    for (int i = 0; i < numSlime; ++i) {
+        file >> x >> y;
+        Slime[i] = new slime(x, y);  // Tạo slime mới tại vị trí (x, y)
+        Slime[i]->loadMedia();
+        dotSlime[i] = Slime[i]->GetDot();  // Cập nhật Dot* của slime vào mảng dotSlime
+    }
+
+    // Đóng file
+    file.close();
+
+    return Slime; // Trả về mảng các con trỏ slime*
+}
+
+void freeSlimes(slime** Slime, Dot** dotSlime, int numSlime)  // hàm xóa
+{
+    for (int i = 0; i < numSlime; ++i) {
+        Slime[i]->free();  // Gọi free() để giải phóng tài nguyên của slime
+        delete Slime[i];  // Giải phóng bộ nhớ cho đối tượng slime
+    }
+    delete[] Slime;  // Giải phóng mảng chứa các con trỏ slime
+
+    delete[] dotSlime;  // Giải phóng mảng Dot* sau khi không còn sử dụng
+}
+
+
+
+
+
+
+
+int main( int argc, char* args[] )
+{
+    srand(static_cast<unsigned int>(time(0)));
+
+    // Start up SDL and create window
+    if( !init() )
+    {
+        printf( "Failed to initialize!\n" );
+    }
+    else
+    {
+        // The level tiles
+        Tile* tileSet[ TOTAL_TILES ];
+
+        // Load media
+        if( !loadMedia( tileSet ) )
+        {
+            printf( "Failed to load media!\n" );
+        }
+        else
+        {
+            // Main loop flag
+            bool quit = false;
+
+            // Event handler
+            SDL_Event e;
+
+            // Keeps track of time between steps
+            LTimer stepTimer;
+
+            // Level camera
+            SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+
+            int numSlime;
+            Dot** dotSlime;
+
+            slime** Slime=createSlimesFromFile("save_game/Slime1.txt", numSlime, dotSlime);
+
+
+            // Calculate the start time
+            Uint32 frameStart;
+            int frameTime;
+
+            // While application is running
+            while( !quit )
+            {
+                frameStart = SDL_GetTicks();  // Get the start time for the frame
+
+                static bool wait_for_quit = 0;
+
+                // Handle events on queue
+                static int renderP = 0; // chưa in pass lần nào;
+                while( SDL_PollEvent( &e ) != 0 )
+                {
+                    wait_for_quit = handleEvent(e, gCharacter, quit);
+                }
+
+                // Calculate time step
+                float timeStep = stepTimer.getTicks() / 1000.f;
+
+                // Move the character
+                if(wait_for_quit == 0){
+                    gCharacter.move(tileSet, timeStep);
+                }
+                gCharacter.attackEnemy(dotSlime, numSlime, 1);
+
+                // Restart step timer
+                stepTimer.start();
+
+                gCharacter.setCamera(camera);
+                if(wait_for_quit == 0){
+                    for(int i = 0; i < numSlime; i++){
+                        Slime[i]->AiHandleEvent(e, tileSet);
+                    }
+                }
+
+                for(int i = 0; i < numSlime; i++){
+                    Slime[i]->setBlendMode(SDL_BLENDMODE_BLEND);
+                }
+
+                gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
+                SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                SDL_RenderClear(gRenderer);
+
+                // Render level
+                for(int i = 0; i < TOTAL_TILES; ++i)
+                {
+                    tileSet[i]->render(camera);
+                }
+
+                for(int i = 0; i < numSlime; i++){
+                    Slime[i]->render(camera);
+                }
+
+                gCharacter.render(camera);
+
+                static float frameRain=0;
+                static bool raining=0;
+                if((frameStart/20000)%2){                               // từ 20 giây đến 40 giây là có mưa
+                       if(!raining) Mix_PlayChannel(-1,gSword,0);
+                        if((frameStart/10000)%2==0)gRainTexture.setAlpha((frameStart/100)%100); //20 đến 30 mưa to dần;
+                        else gRainTexture.setAlpha(100-(frameStart/100)%100);//mưa nhỏ dần
+
+                    frameRain=fmod((frameRain+0.1),4);
+                    SDL_Rect clip={0,(int)frameRain*100,800,500};
+                    gRainTexture.render(0,0,&clip);
+                    raining=true;
+                    printf("rain");
+                }
+                else{raining=false;}
+
+                if(renderPass(dotSlime, numSlime)){
+                    renderP++;
+                    gPassTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
+                }
+                if(renderP >= 300){ quit = true; }
+                if(wait_for_quit){ gPauseTexture.render(0, 0); }
+
+                // Update screen
+                SDL_RenderPresent(gRenderer);
+
+                // Calculate the frame time and delay to maintain the target FPS
+                frameTime = SDL_GetTicks() - frameStart;
+
+                if(frameDelay > frameTime)
+                {
+                    SDL_Delay(frameDelay - frameTime); // Delay to maintain the FPS target
+                }
+            }
+
+            // Free resources and close SDL
+            freeSlimes(Slime, dotSlime, numSlime);
+            close(tileSet);
+        }
+    }
+    return 0;
+}
+
