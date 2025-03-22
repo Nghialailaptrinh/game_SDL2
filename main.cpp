@@ -38,8 +38,9 @@
  const int TILE_BOTTOMLEFT = 9;
  const int TILE_LEFT = 10;
  const int TILE_TOPLEFT = 11;
-////////// hàm hỗ trợ mạnh
 
+
+////////// hàm hỗ trợ mạnh
 
  void SetColor(SDL_Surface* &surface, Uint8 r, Uint8 g, Uint8 b, Uint8 a, Uint8 r2=0, Uint8 g2=0, Uint8 b2=0, Uint8 a2=0)
 {
@@ -126,6 +127,24 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
     return true;
 }
 
+// Hàm kiểm tra khoảng cách giữa hai điểm (x1, y1) và (x2, y2) có nhỏ hơn d không
+int checkDistance(float x1, float y1, float x2, float y2, float d)
+{
+    // Tính khoảng cách giữa hai điểm
+    float distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+
+    // Kiểm tra nếu khoảng cách nhỏ hơn d
+    if (distance < d) {
+        return 1;  // Trả về 1 nếu khoảng cách nhỏ hơn d
+    } else {
+        return 0;  // Trả về 0 nếu khoảng cách không nhỏ hơn d
+    }
+}
+
+
+
+
+
  //Texture wrapper class
  class LTexture
  {
@@ -199,29 +218,13 @@ bool resizeTexture(SDL_Renderer* renderer, SDL_Texture* texture, int newWidth, i
 
  };
 
-// Hàm kiểm tra khoảng cách giữa hai điểm (x1, y1) và (x2, y2) có nhỏ hơn d không
-int checkDistance(float x1, float y1, float x2, float y2, float d)
-{
-    // Tính khoảng cách giữa hai điểm
-    float distance = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
-
-    // Kiểm tra nếu khoảng cách nhỏ hơn d
-    if (distance < d) {
-        return 1;  // Trả về 1 nếu khoảng cách nhỏ hơn d
-    } else {
-        return 0;  // Trả về 0 nếu khoảng cách không nhỏ hơn d
-    }
-}
-
-
-
-
  //The tile
  class Tile
  {
      public:
  		//Initializes position and type
  		Tile( int x, int y, int tileType );
+ 		~Tile(){}
 
  		//Shows the tile
  		void render( SDL_Rect& camera );
@@ -245,6 +248,7 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
  	public:
  		//Initializes internals
  		DataStream(int Frame);
+        ~DataStream(){free();};
 
  		//Loads initial data
  		bool loadMedia(std::string path1);
@@ -284,6 +288,7 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
      public:
  		//Initializes variables
  		LTimer();
+ 		~LTimer(){};
 
  		//The various clock actions
  		void start();
@@ -323,15 +328,16 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
 
  		//Initializes the variables
  		Dot(int x=50,int y=50);
+ 		~Dot(){};
 
  		//Takes key presses and adjusts the dot's velocity
- 		void handleEvent( SDL_Event& e,Dot* dotEnemy[], int numEnemies,int attackRange );
+ 		void handleEvent( SDL_Event& e );
  		void AiHandleEvent( SDL_Event& e,Tile *tiles[] );
 
  		//Moves the dot and check collision against tiles
  		void move( Tile *tiles[], float timeStep );
 
- 		void attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int attackRange=0);
+ 		void attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int attackRange=0, bool inThisFrame=0);
 
  		void setVel(int Vel){DOT_VEL = Vel;}
 
@@ -352,7 +358,9 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
  		int GetY(){return mBox.y;}
 
  		int GetHP(){return mHP;}
+ 		int GetMaxHP(){return maxHP;}
  		void SetHP(int HP){mHP=HP;}
+ 		void SetMaxHP(int MaxHP){maxHP=MaxHP;}
  		void SetDameSword (int dame){dameSword=dame;}
 
         // check direction
@@ -385,6 +393,7 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
  	    bool touch;
  	    bool attack; bool attacking;
         int mHP;
+        int maxHP;
         int dameSword;
 
 
@@ -394,8 +403,12 @@ int checkDistance(float x1, float y1, float x2, float y2, float d)
 class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure có luồng datastream
 { public:
     Character();
+    ~Character() {
+        free();
+    }
     bool loadMedia();
-    void handleEvent(SDL_Event& e ,Dot* dotEnemy[]=nullptr, int numEnemies=0);
+    void handleEvent(SDL_Event& e);
+    void attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int weapon=1);
     void move(Tile* tiles[], float timeStep);
     void setCamera(SDL_Rect& camera);
     void render(SDL_Rect& camera);
@@ -424,6 +437,7 @@ private:
      //Scene textures
      LTexture mName;
      LTexture HP;
+     LTexture HPTexture;
      LTexture gStreamingGo;
      LTexture gStreamingStand;
      LTexture gStreamingRun;
@@ -451,6 +465,7 @@ enum EnemyType {
  class slime  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure có luồng datastream
 { public:
     slime(int x=50,int y=50);
+    ~slime(){free();}
     bool loadMedia();
     void AiHandleEvent(SDL_Event &e, Tile* tiles[]);
     void render(SDL_Rect& camera);
@@ -1106,11 +1121,12 @@ SDL_Color eHPColor {255,0,0};
     touch=0;
     attack=0;
     mHP=100;
+    maxHP=100;
     dameSword=0;
 
  }
 
- void Dot::handleEvent( SDL_Event& e ,Dot* dotEnemy[], int numEnemies, int attackRange)
+ void Dot::handleEvent( SDL_Event& e )
  {
      //If a key was pressed
  	if( e.type == SDL_KEYDOWN && e.key.repeat == 0 )
@@ -1155,18 +1171,13 @@ SDL_Color eHPColor {255,0,0};
       else goDown=1;}
 
 
-
-
-
-
-      attackEnemy(dotEnemy, numEnemies, attackRange);
  }
 
 void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
     static int lastDirection = 0;  // Biến lưu hướng di chuyển trước đó (0: right, 1: up, 2: left, 3: down)
 
     // Mã hóa quặt
-    int moveCode = rand() % 100;  // Giả sử mã hóa từ 0 đến 11 (tùy theo yêu cầu)
+    int moveCode = rand() % 200;  // Giả sử mã hóa từ 0 đến 11 (tùy theo yêu cầu)
 
     // Quy tắc mã hóa quặt
     if (moveCode == 0) {  // Lùi lại (quay ngược lại)
@@ -1254,19 +1265,19 @@ void Dot::move( Tile *tiles[], float timeStep )
          mBox.y -=Y;
          touch=1;
      }
-      if(mHP<=0){dead=1; printf("dead \n");}
 
+    if(mHP<=0)dead=1;
  }
 
-void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange) {
-        if (isAttacking() ) {
+void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inThisFrame) {
+        if (isAttacking() && inThisFrame) {
             for (int i = 0; i < numEnemies; ++i) {
 
                 // Kiểm tra nếu kẻ thù nằm trong phạm vi tấn công
                 if (checkDistance((float)GetX(),(float)GetY(),(float)dotEnemy[i]->GetX(),(float)dotEnemy[i]->GetY(),attackRange)) {
                     // Trừ máu kẻ thù (giảm HP)
-                    int newHP = dotEnemy[i]->GetHP() - 10;  // Giảm 10 HP mỗi lần tấn công (có thể thay đổi)
-                    dotEnemy[i]->SetHP(newHP);
+                    int newHP = dotEnemy[i]->GetHP() - dameSword;
+                    dotEnemy[i]->SetHP((newHP>0)?newHP:0);
                     printf("Enemy at (%d, %d) took damage! New HP: %d\n", dotEnemy[i]->GetX(), dotEnemy[i]->GetY(), newHP);
                 }
             }
@@ -1308,8 +1319,10 @@ void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange) {
  // Character methods
 Character::Character()
     : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1), gDataStreamAttack(1){
-    dotCharacter.SetHP(200);
+    dotCharacter.SetMaxHP(200);
+    dotCharacter.SetHP(dotCharacter.GetMaxHP());
     dotCharacter.SetDameSword(50);
+    dotCharacter.setVel(150);
     }
 
 bool Character::loadMedia() {
@@ -1325,6 +1338,11 @@ bool Character::loadMedia() {
         if( !HP.loadFromRenderedText(path.str(),HPColor) )
  	{
  		printf( "Failed to create HP texture!\n" );
+ 		success = false;
+ 	}
+ 	    if( !HPTexture.loadFromFile("image/character/HP.png") )
+ 	{
+ 		printf( "Failed to create HPTexture texture!\n" );
  		success = false;
  	}
 
@@ -1419,8 +1437,13 @@ bool Character::loadMedia() {
  	return success;
 }
 
-void Character::handleEvent(SDL_Event& e,Dot* dotEnemy[], int numEnemies) {
-    dotCharacter.handleEvent(e,dotEnemy,numEnemies,50);
+void Character::handleEvent(SDL_Event& e) {
+    dotCharacter.handleEvent(e);
+}
+
+void Character::attackEnemy(Dot* dotEnemy[], int numEnemies,  int weapon){
+   int attackRange=50;
+dotCharacter.attackEnemy(dotEnemy,numEnemies,attackRange,gDataStreamAttack.FgetCurrentFrame()>=5.9&&gDataStreamAttack.FgetCurrentFrame()<=6);
 }
 
 
@@ -1457,10 +1480,23 @@ void Character::render(SDL_Rect& camera) {
     int Y=dotCharacter.GetY() + dotCharacter.DOT_HEIGHT - 80 + 10 - camera.y;
     int Frame;
 
-    mName.render(X + 40 - mName.getWidth() / 2 ,
+    mName.render(X + 40 - mName.getWidth() / 2  ,
                              Y);
-    HP.render(X + 40 - HP.getWidth() / 2 ,
-                             Y+15);
+    HP.render(X + 40 - HP.getWidth() / 2 -HPTexture.getWidth(),Y+15);
+
+    printf("%d",HPTexture.getWidth());
+    int hp;
+    if(GetHP()<=dotCharacter.GetMaxHP()*1.0/8)hp=0;
+    else if(GetHP()<=dotCharacter.GetMaxHP()*2*1.0/8)hp=1;
+    else if(GetHP()<=dotCharacter.GetMaxHP()*3*1.0/8) hp=2;
+    else if(GetHP()<=dotCharacter.GetMaxHP()*4*1.0/8) hp=3;
+    else if(GetHP()<=dotCharacter.GetMaxHP()*5*1.0/8)hp=4;
+    else if(GetHP()<=dotCharacter.GetMaxHP()*6*1.0/8)hp=5;
+    else if(GetHP()<=dotCharacter.GetMaxHP()*7*1.0/8)hp=6;
+    else if(GetHP()<=dotCharacter.GetMaxHP()*8*1.0/8)hp=7;
+    SDL_Rect Clip = { 0, hp * 10, 80, 10 };
+
+    HPTexture.render(X + 40 - HPTexture.getWidth() / 2,Y+15,&Clip);
 
 
                 int i;
@@ -1470,11 +1506,8 @@ void Character::render(SDL_Rect& camera) {
                 else i=0;
 
 
-    // Kiểm tra xem nhân vật có đang di chuyển không
     if(isDead()){
 
-
-        // Cập nhật frame hoạt ảnh "die" (di chuyển)
         Frame=16;
         gDataStreamDie.upCurrentFrame(Frame);
         if(gDataStreamDie.FgetCurrentFrame()>=Frame-0.2){dotCharacter.SetDie(1);printf("died \n");}
@@ -1501,8 +1534,8 @@ void Character::render(SDL_Rect& camera) {
 
 
         Frame=8;
-        gDataStreamAttack.upCurrentFrame(Frame);printf("%f\n",gDataStreamAttack.FgetCurrentFrame());
-         if(gDataStreamAttack.FgetCurrentFrame()>=Frame-0.2) {dotCharacter.SetAttacking(isAttack());printf("Attacked \n");}
+        gDataStreamAttack.upCurrentFrame(Frame);
+         if(gDataStreamAttack.FgetCurrentFrame()>=Frame-0.2) {dotCharacter.SetAttacking(isAttack());}
         int x = gDataStreamAttack.getCurrentFrame()%Frame;
         int y = gDataStreamAttack.getCurrentFrame() / Frame +i;
 
@@ -1522,14 +1555,13 @@ void Character::render(SDL_Rect& camera) {
 
 
 
-        // Cập nhật frame hoạt ảnh "go" (di chuyển)
+
         Frame=8;
         gDataStreamRun.upCurrentFrame(Frame);
 
-        // Tính toán vị trí clip cho sprite
-        int x = gDataStreamRun.getCurrentFrame()%Frame;  // Tính x từ mCurrentFrame (số cột)
-        int y = gDataStreamRun.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
 
+        int x = gDataStreamRun.getCurrentFrame()%Frame;
+        int y = gDataStreamRun.getCurrentFrame() / Frame +i;
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
         SDL_Rect clip = { x * 80, y * 80, 80, 80 };
 
@@ -1546,14 +1578,11 @@ void Character::render(SDL_Rect& camera) {
     else if (dotCharacter.isWalk()) {
 
 
-
-        // Cập nhật frame hoạt ảnh "go" (di chuyển)
         Frame=6;
         gDataStreamGo.upCurrentFrame(Frame);
 
-        // Tính toán vị trí clip cho sprite
-        int x = gDataStreamGo.getCurrentFrame() %Frame;  // Tính x từ mCurrentFrame (số cột)
-        int y = gDataStreamGo.getCurrentFrame() / Frame +i;  // Tính y từ mCurrentFrame (số dòng)
+        int x = gDataStreamGo.getCurrentFrame() %Frame;
+        int y = gDataStreamGo.getCurrentFrame() / Frame +i;
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
         SDL_Rect clip = { x * 80, y * 80, 80, 80 };
@@ -1573,8 +1602,6 @@ void Character::render(SDL_Rect& camera) {
      else {
         // Nếu không đi, render đứng yên
 
-
-        // Cập nhật frame hoạt ảnh "go" (di chuyển)
         Frame=((dotCharacter.isUp())? 4:12);
         gDataStreamStand.upCurrentFrame(Frame);
 
@@ -1599,6 +1626,7 @@ void Character::render(SDL_Rect& camera) {
 }
 
 void Character::setBlendMode(SDL_BlendMode blending){
+    HPTexture.setBlendMode(blending);
     gStreamingGo.setBlendMode(blending);
     gStreamingStand.setBlendMode(blending);
     gStreamingRun.setBlendMode(blending);
@@ -1611,6 +1639,7 @@ void Character::free(){
      //Scene textures
      mName.free();
      HP.free();
+     HPTexture.free();
      gStreamingGo.free();
      gStreamingStand.free();
      gStreamingRun.free();
@@ -1628,7 +1657,7 @@ void Character::free(){
 
 /////////////////
 
-slime::slime(int x,int y): dotSlime(x,y){}
+slime::slime(int x,int y): dotSlime(x,y){ }
 
 bool slime::loadMedia(){
     bool success = true;
@@ -1676,6 +1705,13 @@ void slime::render(SDL_Rect& camera){
 
     mName.render(X + width/2 - mName.getWidth() / 2 ,
                              Y-25);
+
+    std::stringstream path;                                         // load lại HP cho Sllime
+        path << (GetHP()) << "/100";
+        if( !HP.loadFromRenderedText(path.str(),eHPColor) )
+ 	{
+ 		printf( "Failed to create HP texture!\n" );
+ 	}
     HP.render(X + width/2 - HP.getWidth() / 2 ,
                              Y-15);
 
@@ -1687,14 +1723,12 @@ void slime::render(SDL_Rect& camera){
                 else i=0;
 
 
-    // Kiểm tra xem nhân vật có đang di chuyển không
-    if(isDead()){
 
-
-        // Cập nhật frame hoạt ảnh "die" (di chuyển)
+      if(isDie()){}
+      else if(isDead()){
         Frame=6;
 
-        if(mFrame==5){dotSlime.SetDie(1);printf("Slime died \n");}
+        if(mFrame>=5.8){dotSlime.SetDie(1);printf("Slime died; %f \n",mFrame);}
         // Tính toán vị trí clip cho sprite
         int x = (int)mFrame;  // Tính x từ mCurrentFrame (số cột)
         int y = 0;  // Tính y từ mCurrentFrame (số dòng)
@@ -1702,7 +1736,6 @@ void slime::render(SDL_Rect& camera){
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
         SDL_Rect clip = { x * width, y * width, width, width };
-
 
         // Vẽ sprite với camera offset
         gStreamingDie.render(
@@ -1718,25 +1751,21 @@ void slime::render(SDL_Rect& camera){
 
      else {
 
-        // Cập nhật frame hoạt ảnh "die" (di chuyển)
+
         Frame=6;
-        // Tính toán vị trí clip cho sprite
-        int x = mFrame;  // Tính x từ mCurrentFrame (số cột)
-        int y = 0;  // Tính y từ mCurrentFrame (số dòng)
+        int x = mFrame;
+        int y = 0;
             mFrame =(mFrame+0.1);
             if(mFrame>=Frame)mFrame=mFrame-Frame;
-        // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
         SDL_Rect clip = { x * width, y * width, width, width };
 
-
-        // Vẽ sprite với camera offset
         gStreamingGo.render(
             X,
             Y,
-            &clip,        // Vùng cắt cho sprite
-            0,            // Góc xoay (không xoay)
-            NULL,         // Không có điểm xoay
-            SDL_FLIP_NONE // Flip nếu nhân vật đi sang trái
+            &clip,
+            0,
+            NULL,
+            SDL_FLIP_NONE
         );
 
     }
@@ -2137,7 +2166,7 @@ void slime::free(){
  			//Level camera
  			SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
- 			slime Slime1(200,50);
+ 			slime Slime1(200,200);
  			Slime1.loadMedia();
 
  			Dot* dotEnemy[1];
@@ -2156,7 +2185,7 @@ void slime::free(){
  					}
 
  					//Handle input for the dot
- 					gCharacter.handleEvent( e,dotEnemy,1 );
+ 					gCharacter.handleEvent( e);
 
  				}
  				//Calculate time step
@@ -2164,6 +2193,7 @@ void slime::free(){
 
  				//Move the character
  				gCharacter.move(tileSet,timeStep);
+ 				gCharacter.attackEnemy(dotEnemy,1,1);
 
  				//Restart step timer
 				stepTimer.start();
@@ -2182,9 +2212,9 @@ void slime::free(){
  					tileSet[ i ]->render( camera );
  				}
 
-
-                gCharacter.render(camera);
                 Slime1.render(camera);
+                gCharacter.render(camera);
+
 
  				//Update scree
  				SDL_RenderPresent( gRenderer );
