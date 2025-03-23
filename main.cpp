@@ -27,7 +27,7 @@
  const int TOTAL_TILE_SPRITES = 12;
 
   // Store the frame rate target
- const int FPS = 40;
+ const int FPS = 60;
  const int frameDelay = 1000 / FPS;  // Delay per frame to reach 40 FPS (in milliseconds)
 
  //The different tile sprites
@@ -423,10 +423,11 @@ int checkDiRect(float x1, float y1, float x2, float y2) {
         int mHP;
         int maxHP;
         int dameSword;
+        //int typeEnemy();
+
 
 
  };
-
 
 class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure có luồng datastream
 { public:
@@ -482,7 +483,6 @@ private:
 
 };
 
-
  class slime  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure có luồng datastream
 { public:
     slime(int x=50,int y=50);
@@ -512,14 +512,52 @@ private:
      float mFrame=0;
 
      //Scene textures
-     LTexture mName;
+     static LTexture mName;
      LTexture HP;
-     LTexture gStreamingGo;
-     LTexture gStreamingAttack;
-     LTexture gStreamingDie;
+     static LTexture gStreamingGo;
+     static LTexture gStreamingAttack;      // tạm thời chưa có nhưng tiềm năng slime có thể tấn công hoặc tương tự
+     static LTexture gStreamingDie;
 
 };
 
+ class wolve  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure có luồng datastream
+{ public:
+    wolve(int x=50,int y=50);
+    ~wolve(){free();}
+    bool loadMedia();
+    void AiHandleEvent(SDL_Event &e, Tile* tiles[]);
+    void render(SDL_Rect& camera);
+
+    int GetX() { return dotWolve.GetX(); }
+    int GetY() { return dotWolve.GetY(); }
+    bool isRight() { return dotWolve.isRight(); }
+    bool isLeft() { return dotWolve.isLeft(); }
+    bool isUp(){ return dotWolve.isUp();}
+    bool isDown() { return dotWolve.isDown(); }
+
+    bool isWalk() { return dotWolve.isWalk(); }
+    bool isRun() { return dotWolve.isRun(); }
+    void setBlendMode(SDL_BlendMode blending );
+    void free();
+    int GetHP(){return dotWolve.GetHP();};
+    bool isDead(){return dotWolve.isDead();}
+    bool isDie(){return dotWolve.isDie();}
+    bool isAttack(){return dotWolve.isAttack();}
+    bool isAttacking(){return dotWolve.isAttacking();}
+    Dot* GetDot(){return &dotWolve;}
+private:
+
+     Dot dotWolve;
+     float mFrame=0;
+
+     //Scene textures
+     static LTexture mName;
+     LTexture HP;
+     static LTexture gStreamingGo;
+     static LTexture gStreamingAttack;
+     static LTexture gStreamingDie;
+
+};
 
 
  //Starts up SDL and creates window
@@ -1308,7 +1346,7 @@ void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
                         int diRect=checkDiRect((float)GetX(),(float)GetY(),(float)dotEnemy[i]->GetX(),(float)dotEnemy[i]->GetY());
                     // Trừ máu kẻ thù (giảm HP)
 
-                    if( (goRight&&(diRect==0))||(goUp&&(diRect==1))||(goLeft&&(diRect==2))||(goRight==0&&goLeft==0&&goUp==0&&diRect==3)){
+                    if( (goRight&&!(diRect==2))||(goUp&&!(diRect==3))||(goLeft&&!(diRect==0))||(goRight==0&&goLeft==0&&goUp==0&& !(diRect==1))){
                     int newHP = dotEnemy[i]->GetHP() - dameSword;
                     dotEnemy[i]->SetHP((newHP>0)?newHP:0);
                     }
@@ -1367,7 +1405,7 @@ bool Character::loadMedia() {
  		success = false;
  	}
  	std::stringstream path;
-        path << (GetHP()) << "/100";
+        path << (GetHP()) << "/" <<dotCharacter.GetMaxHP();
         if( !HP.loadFromRenderedText(path.str(),HPColor) )
  	{
  		printf( "Failed to create HP texture!\n" );
@@ -1475,8 +1513,8 @@ void Character::handleEvent(SDL_Event& e) {
 }
 
 void Character::attackEnemy(Dot* dotEnemy[], int numEnemies,  int weapon){
-   int attackRange=70;
-dotCharacter.attackEnemy(dotEnemy,numEnemies,attackRange,gDataStreamAttack.FgetCurrentFrame()>=5.9&&gDataStreamAttack.FgetCurrentFrame()<=6);
+   int attackRange=50;
+dotCharacter.attackEnemy(dotEnemy,numEnemies,attackRange,gDataStreamAttack.FgetCurrentFrame()>=4.85&&gDataStreamAttack.FgetCurrentFrame()<=5.05);
 if(gDataStreamAttack.FgetCurrentFrame()>=2.9&&gDataStreamAttack.FgetCurrentFrame()<=3)Mix_PlayChannel(-1,gSword,0);
 }
 
@@ -1484,7 +1522,7 @@ if(gDataStreamAttack.FgetCurrentFrame()>=2.9&&gDataStreamAttack.FgetCurrentFrame
 void Character::move(Tile* tiles[], float timeStep) {
     dotCharacter.move(tiles, timeStep);
     std::stringstream path;
-        path << (GetHP()) << "/100";
+        path << (GetHP()) << "/"<<dotCharacter.GetMaxHP();
         HP.free();
         if( !HP.loadFromRenderedText(path.str(),HPColor) )
  	{
@@ -1535,7 +1573,7 @@ void Character::render(SDL_Rect& camera) {
 
     mName.render(X + 40 - mName.getWidth() / 2  ,
                              Y);
-    HP.render(X + 40 - HP.getWidth() / 2 -HPTexture.getWidth()+ 20,Y+15);
+    HP.render(X + 40 - HP.getWidth() / 2 -HPTexture.getWidth()+10,Y+15);
 
 
     int hp;
@@ -1588,6 +1626,7 @@ void Character::render(SDL_Rect& camera) {
 
         Frame=8;
         gDataStreamAttack.upCurrentFrame(Frame);
+        gDataStreamAttack.upCurrentFrame(Frame);
          if(gDataStreamAttack.FgetCurrentFrame()>=Frame-0.2) {dotCharacter.SetAttacking(isAttack());}
         int x = gDataStreamAttack.getCurrentFrame()%Frame;
         int y = gDataStreamAttack.getCurrentFrame() / Frame +i;
@@ -1610,6 +1649,7 @@ void Character::render(SDL_Rect& camera) {
 
 
         Frame=8;
+        gDataStreamRun.upCurrentFrame(Frame);
         gDataStreamRun.upCurrentFrame(Frame);
 
 
@@ -1712,6 +1752,11 @@ void Character::free(){
 
 slime::slime(int x,int y): dotSlime(x,y){dotSlime.setVel(100); }
 
+LTexture slime::mName;
+LTexture slime::gStreamingGo;
+LTexture slime::gStreamingAttack;
+LTexture slime::gStreamingDie;
+
 bool slime::loadMedia(){
     bool success = true;
     if( !mName.loadFromRenderedText("Slime mini",eHPColor) )
@@ -1761,7 +1806,7 @@ void slime::render(SDL_Rect& camera){
                                  Y-25);
 
         std::stringstream path;                                         // load lại HP cho Sllime
-            path << (GetHP()) << "/100";
+            path << (GetHP()) << "/"<< dotSlime.GetMaxHP();
             if( !HP.loadFromRenderedText(path.str(),eHPColor) )
         {
             printf( "Failed to create HP texture!\n" );
@@ -1770,11 +1815,11 @@ void slime::render(SDL_Rect& camera){
                                  Y-15);
 
     }
-                int i;
-                if(dotSlime.isRight()) i=2;
-                else if(dotSlime.isLeft()) i=1;
-                else if(dotSlime.isUp()) i=3;
-                else i=0;
+//                int i;             // đoạn này tạm không cần thiết do slime ko có hường quay
+//                if(dotSlime.isRight()) i=2;
+//                else if(dotSlime.isLeft()) i=1;
+//                else if(dotSlime.isUp()) i=3;
+//                else i=0;
 
 
 
@@ -1842,6 +1887,164 @@ void slime::free(){
      gStreamingDie.free();
 
 }
+
+//////////// Wolve class is same Slime
+
+wolve::wolve(int x,int y): dotWolve(x,y){dotWolve.setVel(150); dotWolve.SetMaxHP(100); } // tuy sói ko nhiều máu bằng slime nhưng chúng rất nhanh nhẹn
+
+LTexture wolve::mName;
+LTexture wolve::gStreamingGo;
+LTexture wolve::gStreamingAttack;
+LTexture wolve::gStreamingDie;
+
+bool wolve::loadMedia(){
+    bool success = true;
+ 	if( !mName.loadFromRenderedText("wild Wolve",eHPColor) )
+ 	{
+ 		printf( "Failed to create Name texture!\n" );
+ 		success = false;
+ 	}
+ 	std::stringstream path;
+        path << (GetHP()) << "/"<<dotWolve.GetMaxHP();
+        if( !HP.loadFromRenderedText(path.str(),HPColor) )
+ 	{
+ 		printf( "Failed to create HP texture!\n" );
+ 		success = false;
+ 	}
+
+    if(!gStreamingGo.loadFromFile("image/enemy/2/Walk_00.png"))
+    {
+ 		printf( "Failed to create W walk texture!\n" );
+ 		success = false;
+ 	}
+    if(!gStreamingDie.loadFromFile("image/enemy/2/Death_00.png"))
+    {
+ 		printf( "Failed to create W death texture!\n" );
+ 		success = false;
+ 	}
+    if(!gStreamingAttack.loadFromFile("image/enemy/2/Attack_00.png"))
+    {
+ 		printf( "Failed to create W attack texture!\n" );
+ 		success = false;
+ 	}
+
+ 	return success;
+}
+
+void wolve::AiHandleEvent(SDL_Event &e, Tile* tiles[]){
+dotWolve.AiHandleEvent(e,tiles);
+}
+
+void wolve::render(SDL_Rect& camera){
+    if(isAttack()) {dotWolve.SetAttacking(1);} // kiểm tra xem có vẻ hoạt ảnh tấn công ko; chỉ cần có lệnh attack thì hoath ảnh sẽ đc vẽ đủ
+    int width=50;
+    int X=dotWolve.GetX() + dotWolve.DOT_WIDTH / 2 - width/2 - camera.x;
+    int Y=dotWolve.GetY() + dotWolve.DOT_HEIGHT - width  - camera.y +5;
+    int Frame;
+
+    if((!isDead())&&checkDistance(dotWolve.GetX(),dotWolve.GetY(),gCharacter.GetDot()->GetX(),gCharacter.GetDot()->GetY(),150)){
+        mName.render(X + width/2 - mName.getWidth() / 2 ,
+                                 Y-25);
+
+        std::stringstream path;                                         // load lại HP cho Sllime
+            path << (GetHP()) << "/"<<dotWolve.GetMaxHP();
+            if( !HP.loadFromRenderedText(path.str(),eHPColor) )
+        {
+            printf( "Failed to create HP texture!\n" );
+        }
+        HP.render(X + width/2 - HP.getWidth() / 2 ,
+                                 Y-15);
+
+    }
+                int i;
+                if(dotWolve.isRight()) i=2;
+                else if(dotWolve.isLeft()) i=1;
+                else if(dotWolve.isUp()) i=3;
+                else i=0;
+
+
+
+      if(isDie()){}
+      else if(isDead()){
+        Frame=6;
+
+        if(mFrame>=5.8){dotWolve.SetDie(1);printf("Wolve died; %f \n",mFrame);}
+
+        int x = (int)mFrame;
+        int y = i;
+        mFrame = fmod(double(mFrame + 0.2), double(Frame));
+
+        SDL_Rect clip = { x * width, y * width, width, width };
+
+        gStreamingDie.render(
+            X,
+            Y,
+            &clip,
+            0,
+            NULL,
+            SDL_FLIP_NONE
+        );
+
+    }
+    else if(isAttacking()){
+        Frame=6;
+
+        if(mFrame>=5.8) {dotWolve.SetAttacking(isAttack());}
+        int x = (int)mFrame;
+        int y = i;
+        mFrame = fmod(double(mFrame + 0.2), double(Frame));
+
+        SDL_Rect clip = { x * width, y * width, width, width };
+
+        gStreamingDie.render(
+            X,
+            Y,
+            &clip,
+            0,
+            NULL,
+            SDL_FLIP_NONE
+        );
+    }
+
+    else {
+
+
+        Frame=6;
+        int x = mFrame;
+        int y = i;
+            mFrame = fmod(double(mFrame + 0.2), double(Frame));
+        SDL_Rect clip = { x * width, y * width, width, width };
+
+        gStreamingGo.render(
+            X,
+            Y,
+            &clip,
+            0,
+            NULL,
+            SDL_FLIP_NONE
+        );
+
+    }
+
+}
+
+void wolve::setBlendMode(SDL_BlendMode blending){
+    gStreamingGo.setBlendMode(blending);
+    gStreamingAttack.setBlendMode(blending);
+    gStreamingDie.setBlendMode(blending);
+}
+
+void wolve::free(){
+
+     //Scene textures
+     mName.free();
+     HP.free();
+     gStreamingGo.free();
+     gStreamingAttack.free();
+     gStreamingDie.free();
+
+}
+
 
 
 
@@ -2044,15 +2247,14 @@ void slime::free(){
 	gFont = NULL;
 
 	Mix_FreeChunk(gSword);
-	Mix_FreeChunk(gRain);
 	gSword=NULL;
-    gRain=NULL;
     Mix_FreeMusic(gRun);
     Mix_FreeMusic(gGo);
+    Mix_FreeChunk(gRain);
 
     gRun=NULL;
     gGo=NULL;
-
+    gRain=NULL;
 
  	//Quit SDL subsystems
  	Mix_Quit();
@@ -2348,6 +2550,79 @@ void freeSlimes(slime** Slime, Dot** dotSlime, int numSlime)  // hàm xóa
 
 
 
+wolve** createVolvesFromFile(const std::string& filename, int& numWolve, Dot**& dotWolve) {
+    std::ifstream file(filename);
+    if (!file) {
+       printf("Failed to open the file!\n");
+        return nullptr;
+    }
+
+
+    file >> numWolve;
+
+    wolve** Wolve = new wolve*[numWolve];
+    dotWolve = new Dot*[numWolve];
+
+    int x, y;
+    for (int i = 0; i < numWolve; ++i) {
+        file >> x >> y;
+        Wolve[i] = new wolve(x, y);
+        Wolve[i]->loadMedia();
+        dotWolve[i] = Wolve[i]->GetDot();
+    }
+
+
+    file.close();
+
+    return Wolve;
+}
+
+void freeWolves(wolve** Wolve, Dot** dotWolve, int numWolve)
+{
+    for (int i = 0; i < numWolve; ++i) {
+        Wolve[i]->free();
+        delete Wolve[i];
+    }
+    delete[] Wolve;
+
+    delete[] dotWolve;
+}
+
+// Hàm xử lý mưa
+void handleRain(Uint32 frameStart) {
+    static bool isRaining = false;  // Biến theo dõi trạng thái mưa
+    static float frameRain = 0;
+
+    // Kiểm tra nếu đang trong thời gian mưa (20 đến 40 giây)
+    if ((frameStart / 20000) % 2) {
+        if (!isRaining) {  // Nếu nhạc mưa chưa được phát
+            if (((frameStart / 100) % 100) > 20) {
+                Mix_PlayChannel(1, gRain, -1);  // Phát nhạc mưa (lặp vô hạn)
+                isRaining = true;  // Đánh dấu là đang mưa
+            }
+        }
+
+        // Tạo hiệu ứng mưa to dần, nhỏ dần
+        if ((frameStart / 10000) % 2 == 0) {
+            gRainTexture.setAlpha((frameStart / 100) % 100);  // 20 đến 30 mưa to dần
+        } else {
+            gRainTexture.setAlpha(100 - (frameStart / 100) % 100);  // Mưa nhỏ dần
+            // Dừng nhạc mưa khi mưa nhỏ dần (dưới 40)
+            if ((100 - (frameStart / 100) % 100) < 40) {
+                Mix_HaltChannel(1);  // Dừng nhạc mưa
+                isRaining = false;  // Đánh dấu là mưa đã kết thúc
+            }
+        }
+
+        // Tạo hiệu ứng mưa
+        frameRain = fmod((frameRain + 0.1), 4);
+        SDL_Rect clip = {0, (int)frameRain * 100, 800, 500};
+        gRainTexture.render(0, 0, &clip);
+    }
+}
+
+
+
 
 
 
@@ -2385,11 +2660,12 @@ int main( int argc, char* args[] )
             // Level camera
             SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
-            int numSlime;
-            Dot** dotSlime;
-
-            slime** Slime=createSlimesFromFile("save_game/Slime1.txt", numSlime, dotSlime);
-
+//            int numSlime;
+//            Dot** dotSlime;
+//            slime** Slime=createSlimesFromFile("save_game/Slime1.txt", numSlime, dotSlime);
+            int numWolve;
+            Dot** dotWolve;
+            wolve** Wolve=createVolvesFromFile("save_game/Slime1.txt",numWolve,dotWolve);
 
             // Calculate the start time
             Uint32 frameStart;
@@ -2416,20 +2692,20 @@ int main( int argc, char* args[] )
                 if(wait_for_quit == 0){
                     gCharacter.move(tileSet, timeStep);
                 }
-                gCharacter.attackEnemy(dotSlime, numSlime, 1);
+                gCharacter.attackEnemy(dotWolve, numWolve, 1);
 
                 // Restart step timer
                 stepTimer.start();
 
                 gCharacter.setCamera(camera);
                 if(wait_for_quit == 0){
-                    for(int i = 0; i < numSlime; i++){
-                        Slime[i]->AiHandleEvent(e, tileSet);
+                    for(int i = 0; i < numWolve; i++){
+                        Wolve[i]->AiHandleEvent(e, tileSet);
                     }
                 }
 
-                for(int i = 0; i < numSlime; i++){
-                    Slime[i]->setBlendMode(SDL_BLENDMODE_BLEND);
+                for(int i = 0; i < numWolve; i++){
+                    Wolve[i]->setBlendMode(SDL_BLENDMODE_BLEND);
                 }
 
                 gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
@@ -2442,28 +2718,16 @@ int main( int argc, char* args[] )
                     tileSet[i]->render(camera);
                 }
 
-                for(int i = 0; i < numSlime; i++){
-                    Slime[i]->render(camera);
+                for(int i = 0; i < numWolve; i++){
+                    Wolve[i]->render(camera);
                 }
 
                 gCharacter.render(camera);
+                handleRain(frameStart);
 
-                static float frameRain=0;
-                static bool raining=0;
-                if((frameStart/20000)%2){                               // từ 20 giây đến 40 giây là có mưa
-                       if(!raining) Mix_PlayChannel(-1,gSword,0);
-                        if((frameStart/10000)%2==0)gRainTexture.setAlpha((frameStart/100)%100); //20 đến 30 mưa to dần;
-                        else gRainTexture.setAlpha(100-(frameStart/100)%100);//mưa nhỏ dần
 
-                    frameRain=fmod((frameRain+0.1),4);
-                    SDL_Rect clip={0,(int)frameRain*100,800,500};
-                    gRainTexture.render(0,0,&clip);
-                    raining=true;
-                    printf("rain");
-                }
-                else{raining=false;}
 
-                if(renderPass(dotSlime, numSlime)){
+                if(renderPass(dotWolve, numWolve)){
                     renderP++;
                     gPassTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
                 }
@@ -2473,7 +2737,7 @@ int main( int argc, char* args[] )
                 // Update screen
                 SDL_RenderPresent(gRenderer);
 
-                // Calculate the frame time and delay to maintain the target FPS
+                // FPS
                 frameTime = SDL_GetTicks() - frameStart;
 
                 if(frameDelay > frameTime)
@@ -2483,7 +2747,8 @@ int main( int argc, char* args[] )
             }
 
             // Free resources and close SDL
-            freeSlimes(Slime, dotSlime, numSlime);
+            //freeSlimes(Slime, dotSlime, numSlime);
+            freeWolves(Wolve,dotWolve,numWolve);
             close(tileSet);
         }
     }
