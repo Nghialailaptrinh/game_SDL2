@@ -11,6 +11,8 @@
  #include <sstream>
  #include <iomanip>
  #include <cmath>
+ #include <utility>
+ #include <iostream>
 
  //Screen dimension constants
  const int SCREEN_WIDTH = 800;
@@ -166,9 +168,20 @@ int checkDiRect(float x1, float y1, float x2, float y2) {
     }
 }
 
+float getDistance(float x1, float y1, float x2, float y2) {
+    // Tính khoảng cách theo công thức Euclidean
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+}
 
+std::pair<int, int>* createPositionArray(int size = 20) {
+   std::pair<int, int>* position = new std::pair<int, int>[size];
+    // Khởi tạo các cặp pair với giá trị {50, 50}
+    for (int i = 0; i < size; ++i) {
+        position[i] = std::make_pair(50, 50);
+    }
 
-
+    return position;  // Trả về con trỏ chứa mảng các pair
+}
 
 
  //Texture wrapper class
@@ -353,17 +366,17 @@ int checkDiRect(float x1, float y1, float x2, float y2) {
         int DOT_VEL = 100;
 
  		//Initializes the variables
- 		Dot(int x=50,int y=50);
+ 		Dot(int x=50,int y=50,int typeE=0);
  		~Dot(){};
 
  		//Takes key presses and adjusts the dot's velocity
  		void handleEvent( SDL_Event& e );
- 		void AiHandleEvent( SDL_Event& e,Tile *tiles[] );
+ 		void AiHandleEvent( SDL_Event& e,Tile *tiles[],std::pair<int,int>* position=nullptr );
 
  		//Moves the dot and check collision against tiles
  		void move( Tile *tiles[], float timeStep );
 
- 		void attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int attackRange=0, bool inThisFrame=0);
+ 		bool attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int attackRange=0, bool inThisFrame=0);
 
  		void setVel(int Vel){DOT_VEL = Vel;}
 
@@ -376,6 +389,8 @@ int checkDiRect(float x1, float y1, float x2, float y2) {
 
  		void SetDie(bool Die){die=Die;}
  		void SetAttack(bool Attack){attack=Attack;} void SetAttacking(bool Attacking){attacking=Attacking;}
+
+ 		void updatePosition(std::pair<int, int> position[20]);    // để lại bóng
  		//get HP
  		int getHP (){return mHP;}
 
@@ -389,6 +404,8 @@ int checkDiRect(float x1, float y1, float x2, float y2) {
  		void SetHP(int HP){mHP=HP;}
  		void SetMaxHP(int MaxHP){maxHP=MaxHP;}
  		void SetDameSword (int dame){dameSword=dame;}
+ 		void SetHurt(bool Hurt){hurt=Hurt;}
+ 		void SetTimeHurt(int TimeHurt){timeHurt=TimeHurt;}
 
         // check direction
         bool isRight(){return goRight;}
@@ -420,10 +437,11 @@ int checkDiRect(float x1, float y1, float x2, float y2) {
  	    bool goDown;
  	    bool touch;
  	    bool attack; bool attacking;
+ 	    bool hurt; int timeHurt;
         int mHP;
         int maxHP;
         int dameSword;
-        //int typeEnemy();
+        int typeEnemy;
 
 
 
@@ -437,7 +455,7 @@ class Character  // nhân vật là 1 chấm  ; hoạt ảnh là các textrure c
     }
     bool loadMedia();
     void handleEvent(SDL_Event& e);
-    void attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int weapon=1);
+    bool attackEnemy(Dot* dotEnemy[]=nullptr, int numEnemies=0, int weapon=1);
     void move(Tile* tiles[], float timeStep);
     void setCamera(SDL_Rect& camera);
     void render(SDL_Rect& camera);
@@ -488,7 +506,7 @@ private:
     slime(int x=50,int y=50);
     ~slime(){free();}
     bool loadMedia();
-    void AiHandleEvent(SDL_Event &e, Tile* tiles[]);
+    void AiHandleEvent(SDL_Event &e, Tile* tiles[],std::pair<int,int>* position=nullptr );
     void render(SDL_Rect& camera);
 
     int GetX() { return dotSlime.GetX(); }
@@ -525,7 +543,7 @@ private:
     wolve(int x=50,int y=50);
     ~wolve(){free();}
     bool loadMedia();
-    void AiHandleEvent(SDL_Event &e, Tile* tiles[]);
+    void AiHandleEvent(SDL_Event &e, Tile* tiles[],std::pair<int,int>* position=nullptr );
     void render(SDL_Rect& camera);
 
     int GetX() { return dotWolve.GetX(); }
@@ -587,7 +605,6 @@ private:
  //Globally used font
  TTF_Font* gFont = NULL;
 
-Character gCharacter;
 //slime[10]
 SDL_Color nameColor {0,0,255};
 SDL_Color HPColor {0,100,255};
@@ -609,6 +626,12 @@ SDL_Color eHPColor {255,0,0};
  Mix_Chunk *gRain = NULL;
  Mix_Chunk *gSword = NULL;
 
+ //////////////
+ Character gCharacter;
+ int numWolve;
+ Dot** dotWolve;
+ int numSlime;
+ Dot** dotSlime;
 
  //////////////
  LTexture::LTexture()
@@ -1168,7 +1191,7 @@ SDL_Color eHPColor {255,0,0};
 
 
  //////////////
- Dot::Dot(int x,int y)
+ Dot::Dot(int x,int y,int typeE)
  {
      //Initialize the collision box
      mBox.x = x;
@@ -1190,9 +1213,12 @@ SDL_Color eHPColor {255,0,0};
     goDown = 0;
     touch=0;
     attack=0;
+    hurt=0;
+    timeHurt=0;
     mHP=100;
     maxHP=100;
     dameSword=0;
+    typeEnemy=typeE;
 
  }
 
@@ -1243,64 +1269,111 @@ SDL_Color eHPColor {255,0,0};
 
  }
 
-void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[]) {
-    // Mã hóa quặt
-    int moveCode = rand() % 200;  // Giả sử mã hóa từ 0 đến 11 (tùy theo yêu cầu)
-
-    // Quy tắc mã hóa quặt
-    if (moveCode == 0) {  // Lùi lại (quay ngược lại)
-        lastDirection = (lastDirection + 2) % 4;
-    }
-    else if ( moveCode <= 3) {
-        lastDirection = (lastDirection + 1) % 4;
-    }
-    else if ( moveCode <= 6) {
-        lastDirection = (lastDirection - 1 + 4) % 4;
+void Dot::updatePosition(std::pair<int,int>* position) {
+    // Di chuyển bóng các vị trí còn lại về trước (đẩy lùi các bóng)
+    for (int i = 19; i > 0; --i) {
+        position[i] = position[i - 1];  // Đẩy lùi các bóng
     }
 
+    // Cập nhật bóng số 0 là vị trí hiện tại của nhân vật
+    position[0] = std::make_pair(mBox.x, mBox.y);  // Cập nhật bóng với vị trí hiện tại
+}
 
-    // Cập nhật hướng di chuyển và trạng thái vận tốc
-    switch (lastDirection) {
-        case 0:  // Di chuyển phải
-            mVelX = DOT_VEL;
-            mVelY = 0;
-            break;
-        case 1:  // Di chuyển lên
-            mVelX = 0;
-            mVelY = -DOT_VEL;
-            break;
-        case 2:  // Di chuyển trái
-            mVelX = -DOT_VEL;
-            mVelY = 0;
-            break;
-        case 3:  // Di chuyển dưới
-            mVelX = 0;
-            mVelY = DOT_VEL;
-            break;
+void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* position) {
+    bool hasMoved = false;
+    bool isAngry = false;
+    if(mHP<=0){dead=1;}
+
+    if (timeHurt == 4 && typeEnemy == 2) {
+        setVel(200);
     }
 
-        touch=0;//reset va chạm
-    // Di chuyển nhân vật
-    move(tiles, 0.01);
+    if (hurt != 0) {
+        timeHurt -= 4;
+    }
 
+    if (timeHurt <= 0) {
+        hurt = 0;
+        timeHurt = 0;
+    }
 
-    if (touch==1) {
-        // Nếu va vào tường, đổi hướng
-        if (mVelX != 0) {
-            mVelX = -mVelX;  // Đổi hướng X
+    if (hurt && (typeEnemy > 1) && getDistance((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY()) < 25) {
+        attack = 1;
+        goUp = goDown = goRight = goLeft = 0;
+        lastDirection= checkDiRect((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY());
+            if (lastDirection == 3) { goDown = 1;  }
+            else if (lastDirection == 1) { goUp = 1;  }
+            else if (lastDirection == 0) { goRight = 1; }
+            else if (lastDirection == 2) { goLeft = 1;  }
+    } else {
+        attack = 0;
+        if (hurt && (typeEnemy > 1)) {
+            isAngry = true;
         }
-        if (mVelY != 0) {
-            mVelY = -mVelY;  // Đổi hướng Y
+
+        if (isAngry && (position != nullptr)){
+            for (int i = 19; i >=0 ; --i) {
+                if (position[i].first > mBox.x)
+                    mVelX = DOT_VEL;
+                else if (position[i].first < mBox.x)
+                    mVelX = -DOT_VEL;
+
+                if (position[i].second > mBox.y)
+                    mVelY = DOT_VEL;
+                else if (position[i].second < mBox.y)
+                    mVelY = -DOT_VEL;
+
+                move(tiles, 0.01);
+
+                if (touch == 1) {
+                    touch = 0;
+                } else {
+                    hasMoved = true;
+                    break;
+                }
+            }
+            goUp = goDown = goRight = goLeft = 0;
+            lastDirection= checkDiRect((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY());
+            if (lastDirection == 3) { goDown = 1;  }
+            else if (lastDirection == 1) { goUp = 1;  }
+            else if (lastDirection == 0) { goRight = 1; }
+            else if (lastDirection == 2) { goLeft = 1;  }
+        } else if (!hasMoved) {
+            int moveCode = rand() % 600;
+
+            if (moveCode >=20) {
+                // Giữ nguyên hướng di chuyển
+            } else {
+                if (moveCode < 2)
+                    lastDirection = (lastDirection + 2) % 4;
+                else if (moveCode <= 10)
+                    lastDirection = (lastDirection + 1) % 4;
+                else if (moveCode <= 19)
+                    lastDirection = (lastDirection - 1 + 4) % 4;
+
+                switch (lastDirection) {
+                    case 0: mVelX = DOT_VEL; mVelY = 0; break;
+                    case 1: mVelX = 0; mVelY = -DOT_VEL; break;
+                    case 2: mVelX = -DOT_VEL; mVelY = 0; break;
+                    case 3: mVelX = 0; mVelY = DOT_VEL; break;
+                }
+            }
+
+            touch = 0;
+            move(tiles, 0.01);
+            if (touch == 1) {
+                touch = 0;
+                mVelX = -mVelX;
+                mVelY = -mVelY;
+            }
+            goUp = goDown = goRight = goLeft = 0;
+            if (mVelX > 0) { goRight = 1; lastDirection = 0; }
+            else if (mVelX < 0) { goLeft = 1; lastDirection = 2; }
+
+            if (mVelY > 0) { goDown = 1; lastDirection = 3; }
+            else if (mVelY < 0) { goUp = 1; lastDirection = 1; }
         }
     }
-    goUp=0,goDown=0,goRight=0,goLeft=0;
-    if(mVelX>0){goRight=1;lastDirection=0;}
-    else if(mVelX<0){goLeft=1;lastDirection=2;}
-    else{}
-
-    if(mVelY>0){goDown=1;lastDirection=3;}
-    else if(mVelY<0){goUp=1;lastDirection=1;}
-    else{}
 
 
 }
@@ -1337,7 +1410,8 @@ void Dot::move( Tile *tiles[], float timeStep )
     if(mHP<=0)dead=1;
  }
 
-void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inThisFrame) {
+bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inThisFrame) {
+    bool damage=0;
         if (isAttacking() && inThisFrame) {
             for (int i = 0; i < numEnemies; ++i) {
 
@@ -1347,12 +1421,19 @@ void Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
                     // Trừ máu kẻ thù (giảm HP)
 
                     if( (goRight&&!(diRect==2))||(goUp&&!(diRect==3))||(goLeft&&!(diRect==0))||(goRight==0&&goLeft==0&&goUp==0&& !(diRect==1))){
+                            damage =1; // đánh trúng
                     int newHP = dotEnemy[i]->GetHP() - dameSword;
                     dotEnemy[i]->SetHP((newHP>0)?newHP:0);
+                    dotEnemy[i]->SetHurt(1);
+                    dotEnemy[i]->SetTimeHurt(5000);
+                    if(dotEnemy[i]->typeEnemy==2)dotEnemy[i]->setVel(200);     // sói chuyển sang trái thái thần tốc;
+                    else if(dotEnemy[i]->typeEnemy==3)dotEnemy[i]->SetDameSword(100);       // goblin chuyển sang trạng thái cuồng bạo
+                    else{}
                     }
                 }
             }
         }
+       return damage;
     }
 
  void Dot::setCamera( SDL_Rect& camera )
@@ -1512,10 +1593,10 @@ void Character::handleEvent(SDL_Event& e) {
     dotCharacter.handleEvent(e);
 }
 
-void Character::attackEnemy(Dot* dotEnemy[], int numEnemies,  int weapon){
+bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies,  int weapon){
    int attackRange=50;
-dotCharacter.attackEnemy(dotEnemy,numEnemies,attackRange,gDataStreamAttack.FgetCurrentFrame()>=4.85&&gDataStreamAttack.FgetCurrentFrame()<=5.05);
 if(gDataStreamAttack.FgetCurrentFrame()>=2.9&&gDataStreamAttack.FgetCurrentFrame()<=3)Mix_PlayChannel(-1,gSword,0);
+return dotCharacter.attackEnemy(dotEnemy,numEnemies,attackRange,gDataStreamAttack.FgetCurrentFrame()>=4.85&&gDataStreamAttack.FgetCurrentFrame()<=5.05);
 }
 
 
@@ -1750,7 +1831,7 @@ void Character::free(){
 
 /////////////////
 
-slime::slime(int x,int y): dotSlime(x,y){dotSlime.setVel(100); }
+slime::slime(int x,int y): dotSlime(x,y,1){dotSlime.setVel(100); }
 
 LTexture slime::mName;
 LTexture slime::gStreamingGo;
@@ -1791,8 +1872,8 @@ bool slime::loadMedia(){
 
 }
 
-void slime::AiHandleEvent(SDL_Event &e, Tile* tiles[]){
-dotSlime.AiHandleEvent(e,tiles);
+void slime::AiHandleEvent(SDL_Event &e, Tile* tiles[],std::pair<int,int>* position){
+dotSlime.AiHandleEvent(e,tiles,position);
 }
 
 void slime::render(SDL_Rect& camera){
@@ -1831,7 +1912,7 @@ void slime::render(SDL_Rect& camera){
         // Tính toán vị trí clip cho sprite
         int x = (int)mFrame;  // Tính x từ mCurrentFrame (số cột)
         int y = 0;  // Tính y từ mCurrentFrame (số dòng)
-        mFrame = fmod(double(mFrame + 0.2), double(Frame));
+        mFrame = fmod(double(mFrame + 0.15), double(Frame));
 
         // Tạo vùng clip cho sprite, mỗi sprite có kích thước 80x80
         SDL_Rect clip = { x * width, y * width, width, width };
@@ -1890,7 +1971,7 @@ void slime::free(){
 
 //////////// Wolve class is same Slime
 
-wolve::wolve(int x,int y): dotWolve(x,y){dotWolve.setVel(150); dotWolve.SetMaxHP(100); } // tuy sói ko nhiều máu bằng slime nhưng chúng rất nhanh nhẹn
+wolve::wolve(int x,int y): dotWolve(x,y,2){dotWolve.setVel(100); dotWolve.SetMaxHP(100);dotWolve.SetDameSword(20); } // tuy sói ko nhiều máu bằng slime nhưng chúng rất nhanh nhẹn
 
 LTexture wolve::mName;
 LTexture wolve::gStreamingGo;
@@ -1931,8 +2012,8 @@ bool wolve::loadMedia(){
  	return success;
 }
 
-void wolve::AiHandleEvent(SDL_Event &e, Tile* tiles[]){
-dotWolve.AiHandleEvent(e,tiles);
+void wolve::AiHandleEvent(SDL_Event &e, Tile* tiles[],std::pair<int,int>* position){
+dotWolve.AiHandleEvent(e,tiles,position);
 }
 
 void wolve::render(SDL_Rect& camera){
@@ -1968,11 +2049,11 @@ void wolve::render(SDL_Rect& camera){
       else if(isDead()){
         Frame=6;
 
-        if(mFrame>=5.8){dotWolve.SetDie(1);printf("Wolve died; %f \n",mFrame);}
+        if(mFrame>=5.9){dotWolve.SetDie(1);printf("Wolve died; %f \n",mFrame);}
 
         int x = (int)mFrame;
         int y = i;
-        mFrame = fmod(double(mFrame + 0.2), double(Frame));
+        mFrame = fmod(double(mFrame + 0.05), double(Frame));
 
         SDL_Rect clip = { x * width, y * width, width, width };
 
@@ -1989,14 +2070,14 @@ void wolve::render(SDL_Rect& camera){
     else if(isAttacking()){
         Frame=6;
 
-        if(mFrame>=5.8) {dotWolve.SetAttacking(isAttack());}
+        if(mFrame>=5.9) {dotWolve.SetAttacking(isAttack());}
         int x = (int)mFrame;
         int y = i;
-        mFrame = fmod(double(mFrame + 0.2), double(Frame));
+        mFrame = fmod(double(mFrame + 0.1), double(Frame));
 
         SDL_Rect clip = { x * width, y * width, width, width };
 
-        gStreamingDie.render(
+        gStreamingAttack.render(
             X,
             Y,
             &clip,
@@ -2527,7 +2608,7 @@ slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& 
     for (int i = 0; i < numSlime; ++i) {
         file >> x >> y;
         Slime[i] = new slime(x, y);  // Tạo slime mới tại vị trí (x, y)
-        Slime[i]->loadMedia();
+        if(i==0) Slime[i]->loadMedia();
         dotSlime[i] = Slime[i]->GetDot();  // Cập nhật Dot* của slime vào mảng dotSlime
     }
 
@@ -2540,7 +2621,7 @@ slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& 
 void freeSlimes(slime** Slime, Dot** dotSlime, int numSlime)  // hàm xóa
 {
     for (int i = 0; i < numSlime; ++i) {
-        Slime[i]->free();  // Gọi free() để giải phóng tài nguyên của slime
+         Slime[i]->free();  // Gọi free() để giải phóng tài nguyên của slime
         delete Slime[i];  // Giải phóng bộ nhớ cho đối tượng slime
     }
     delete[] Slime;  // Giải phóng mảng chứa các con trỏ slime
@@ -2567,7 +2648,7 @@ wolve** createVolvesFromFile(const std::string& filename, int& numWolve, Dot**& 
     for (int i = 0; i < numWolve; ++i) {
         file >> x >> y;
         Wolve[i] = new wolve(x, y);
-        Wolve[i]->loadMedia();
+        if(i==0) Wolve[i]->loadMedia(); // ta chỉ cần load ảnh của 1 kẻ địch vì static
         dotWolve[i] = Wolve[i]->GetDot();
     }
 
@@ -2580,7 +2661,7 @@ wolve** createVolvesFromFile(const std::string& filename, int& numWolve, Dot**& 
 void freeWolves(wolve** Wolve, Dot** dotWolve, int numWolve)
 {
     for (int i = 0; i < numWolve; ++i) {
-        Wolve[i]->free();
+         Wolve[i]->free(); // ta cũng chỉ cần free 1 kẻ địch
         delete Wolve[i];
     }
     delete[] Wolve;
@@ -2621,6 +2702,19 @@ void handleRain(Uint32 frameStart) {
     }
 }
 
+void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position = nullptr) {
+
+    for (int i = 0; i < numWolve; i++) {
+        dotWolve[i]->AiHandleEvent(e, tileSet, position); // Xử lý sự kiện cho từng Wolve
+    }
+
+    // Xử lý sự kiện cho tất cả các Slime
+    for (int i = 0; i < numSlime; i++) {
+        dotSlime[i]->AiHandleEvent(e, tileSet, position); // Xử lý sự kiện cho từng Slime
+    }
+}
+
+
 
 
 
@@ -2660,16 +2754,16 @@ int main( int argc, char* args[] )
             // Level camera
             SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
-//            int numSlime;
-//            Dot** dotSlime;
-//            slime** Slime=createSlimesFromFile("save_game/Slime1.txt", numSlime, dotSlime);
-            int numWolve;
-            Dot** dotWolve;
             wolve** Wolve=createVolvesFromFile("save_game/Slime1.txt",numWolve,dotWolve);
+            slime** Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
+            std::pair<int,int>* position = createPositionArray(20);
 
             // Calculate the start time
             Uint32 frameStart;
             int frameTime;
+
+            /////////
+             Dot* a= gCharacter.GetDot();
 
             // While application is running
             while( !quit )
@@ -2690,23 +2784,19 @@ int main( int argc, char* args[] )
 
                 // Move the character
                 if(wait_for_quit == 0){
-                    gCharacter.move(tileSet, timeStep);
+                     gCharacter.move(tileSet, timeStep);
+
+                     a->updatePosition(position);
+                     AiHandle(e,tileSet,position);   // enemy xử lý sự kiện
+
                 }
                 gCharacter.attackEnemy(dotWolve, numWolve, 1);
-
+                gCharacter.attackEnemy(dotSlime, numSlime, 1);
                 // Restart step timer
                 stepTimer.start();
 
                 gCharacter.setCamera(camera);
-                if(wait_for_quit == 0){
-                    for(int i = 0; i < numWolve; i++){
-                        Wolve[i]->AiHandleEvent(e, tileSet);
-                    }
-                }
 
-                for(int i = 0; i < numWolve; i++){
-                    Wolve[i]->setBlendMode(SDL_BLENDMODE_BLEND);
-                }
 
                 gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
                 SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
@@ -2721,13 +2811,16 @@ int main( int argc, char* args[] )
                 for(int i = 0; i < numWolve; i++){
                     Wolve[i]->render(camera);
                 }
+                for(int i = 0; i < numSlime; i++){
+                    Slime[i]->render(camera);
+                }
 
                 gCharacter.render(camera);
                 handleRain(frameStart);
 
 
 
-                if(renderPass(dotWolve, numWolve)){
+                if(renderPass(dotWolve, numWolve)&&renderPass(dotSlime,numSlime)){
                     renderP++;
                     gPassTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
                 }
@@ -2744,14 +2837,16 @@ int main( int argc, char* args[] )
                 {
                     SDL_Delay(frameDelay - frameTime); // Delay to maintain the FPS target
                 }
+
             }
 
             // Free resources and close SDL
-            //freeSlimes(Slime, dotSlime, numSlime);
+            freeSlimes(Slime, dotSlime, numSlime);
             freeWolves(Wolve,dotWolve,numWolve);
             close(tileSet);
         }
     }
+
     return 0;
 }
 
