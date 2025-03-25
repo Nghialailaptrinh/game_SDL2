@@ -31,7 +31,6 @@
 
 
 
-
  bool init()
  {
  	//Initialization flag
@@ -416,6 +415,7 @@ void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position = null
 
 
 
+
 int main( int argc, char* args[] )
 {
     srand(static_cast<unsigned int>(time(0)));
@@ -458,7 +458,7 @@ int main( int argc, char* args[] )
             int frameTime;
 
             /////////
-             Dot* a= gCharacter.GetDot();
+
 
             // While application is running
             while( !quit )
@@ -481,12 +481,18 @@ int main( int argc, char* args[] )
                 if(wait_for_quit == 0){
                      gCharacter.move(tileSet, timeStep);
                     if((frameStart/100)%2)  // cứ 1/10 giây mới lưu bóng 1 lần;
-                     {a->updatePosition(position);}
+                     {dotCharacter->updatePosition(position);}
                      AiHandle(e,tileSet,position);   // enemy xử lý sự kiện
 
                 }
                 gCharacter.attackEnemy(dotWolve, numWolve, 1);
                 gCharacter.attackEnemy(dotSlime, numSlime, 1);
+
+                for(int i=0;i<numWolve;i++){
+                    if(!Wolve[i]->isDead())
+                    Wolve[i]->attackEnemy();
+                }
+
                 // Restart step timer
                 stepTimer.start();
 
@@ -532,6 +538,7 @@ int main( int argc, char* args[] )
                 {
                     SDL_Delay(frameDelay - frameTime); // Delay to maintain the FPS target
                 }
+                if(gCharacter.isDie())quit=true;
 
             }
 

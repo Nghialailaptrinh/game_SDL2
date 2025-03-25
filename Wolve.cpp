@@ -59,7 +59,8 @@ void wolve::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* posi
 
 void wolve::render(SDL_Rect& camera)
 {
-    if (isAttack()) { dotWolve.SetAttacking(1); }
+    if(GetHP()<=0)dotWolve.SetDead(1);
+    else if (isAttack()) { dotWolve.SetAttacking(1); }
     int width = 50;
     int X = dotWolve.GetX() + dotWolve.DOT_WIDTH / 2 - width / 2 - camera.x;
     int Y = dotWolve.GetY() + dotWolve.DOT_HEIGHT - width - camera.y + 5;
@@ -106,7 +107,7 @@ void wolve::render(SDL_Rect& camera)
         if (mFrame >= 5.7) { dotWolve.SetAttacking(isAttack()); }
         int x = (int)mFrame;
         int y = i;
-        mFrame = fmod(double(mFrame + 0.2), double(Frame));
+        mFrame = fmod(double(mFrame + 0.1), double(Frame));
 
         SDL_Rect clip = { x * width, y * width, width, width };
 
@@ -138,4 +139,8 @@ void wolve::free()
     gStreamingGo.free();
     gStreamingAttack.free();
     gStreamingDie.free();
+}
+
+bool wolve::attackEnemy(){
+return dotWolve.attackEnemy(dotCharacter0,1,25,mFrame>=3.8 && mFrame<=3.95);
 }

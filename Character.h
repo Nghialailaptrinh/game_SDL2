@@ -59,5 +59,7 @@ private:
 };
 
 extern Character gCharacter;
+extern Dot* dotCharacter;
+extern Dot* dotCharacter0[1];
 
 #endif // CHARACTER_H_INCLUDED

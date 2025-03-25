@@ -26,6 +26,7 @@ public:
     bool isWalk() { return dotWolve.isWalk(); }
     bool isRun() { return dotWolve.isRun(); }
     void setBlendMode(SDL_BlendMode blending);
+    bool attackEnemy();
     void free();
     int GetHP() { return dotWolve.GetHP(); }
     bool isDead() { return dotWolve.isDead(); }

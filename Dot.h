@@ -28,6 +28,7 @@ public:
     void setCamera(SDL_Rect& camera);
 
     void SetDie(bool Die) { die = Die; }
+    void SetDead(bool Dead) { dead = Dead; }
     void SetAttack(bool Attack) { attack = Attack; }
     void SetAttacking(bool Attacking) { attacking = Attacking; }
 

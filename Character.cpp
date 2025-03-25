@@ -2,6 +2,9 @@
 
 
 Character gCharacter;
+Dot* dotCharacter = gCharacter.GetDot(); // Tạo con trỏ chỉ đến đối tượng Dot
+Dot* dotCharacter0[1] = {dotCharacter}; // Gán trực tiếp con trỏ vào mảng
+
 
 Character::Character()
     : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1), gDataStreamAttack(1)
@@ -125,9 +128,9 @@ void Character::handleEvent(SDL_Event& e)
     dotCharacter.handleEvent(e);
 }
 
-bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies, int weapon)
-{
-    int attackRange = 50;
+bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies, int weapon)  // demo weapon 1 laf kiến; mỗi vũ khí có tầm đánh và sát thương khác nhau
+{     if(weapon==1)dotCharacter.SetDameSword(50);
+    int attackRange ;if(weapon==1)attackRange =50;
     if (gDataStreamAttack.FgetCurrentFrame() >= 2.9 && gDataStreamAttack.FgetCurrentFrame() <= 3)
         Mix_PlayChannel(-1, gSword, 0);
     return dotCharacter.attackEnemy(dotEnemy, numEnemies, attackRange, gDataStreamAttack.FgetCurrentFrame() >= 4.85 && gDataStreamAttack.FgetCurrentFrame() <= 5.05);
