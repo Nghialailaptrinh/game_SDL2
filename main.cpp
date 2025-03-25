@@ -480,8 +480,8 @@ int main( int argc, char* args[] )
                 // Move the character
                 if(wait_for_quit == 0){
                      gCharacter.move(tileSet, timeStep);
-
-                     a->updatePosition(position);
+                    if((frameStart/100)%2)  // cứ 1/10 giây mới lưu bóng 1 lần;
+                     {a->updatePosition(position);}
                      AiHandle(e,tileSet,position);   // enemy xử lý sự kiện
 
                 }

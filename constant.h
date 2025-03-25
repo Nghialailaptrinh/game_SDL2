@@ -38,7 +38,7 @@ const int TOTAL_TILE_SPRITES = 12;
 
 
 // Store the frame rate target
-const int FPS = 60;
+const int FPS = 50;
 const int frameDelay = 1000 / FPS;  // Delay per frame to reach 60 FPS (in milliseconds)
 
 extern SDL_Color nameColor ;

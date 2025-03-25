@@ -66,6 +66,7 @@ private:
     bool die, dead, run, walk;
     bool goRight, goLeft, goUp, goDown;
     bool touch, attack, attacking;
+    bool touchX,touchY;
     bool hurt;
     int timeHurt;
     int mHP, maxHP, dameSword;

@@ -1,6 +1,7 @@
 #include "Dot.h"
 #include "Character.h"
-//class Character;
+#include <utility>  // Để sử dụng std::pair
+
 
 Dot** dotSlime;
 Dot** dotWolve;
@@ -26,7 +27,7 @@ Dot** dotWolve;
     goLeft = 0;
     goUp =0;
     goDown = 0;
-    touch=0;
+    touch=touchX=touchY=0;
     attack=0;
     hurt=0;
     timeHurt=0;
@@ -111,8 +112,12 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* positi
         timeHurt = 0;
     }
 
-    if (hurt && (typeEnemy > 1) && getDistance((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY()) < 50) {
+    if (hurt && (typeEnemy > 1) && getDistance((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY()) < 25) {
         attack = 1;
+        lastDirection=checkDiRect((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY()); // hướng cắn
+        mVelX=0;
+        mVelY=0;
+
     } else {
         attack = 0;
         if (hurt && (typeEnemy > 1)) {
@@ -121,25 +126,36 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* positi
 
         if (isAngry && (position != nullptr)) {
             for (int i = 0; i < 20; ++i) {
-                if (position[i].first > mBox.x)
-                    mVelX = DOT_VEL;
-                else if (position[i].first < mBox.x)
-                    mVelX = -DOT_VEL;
+                    if(abs(position[i].first-mBox.x)>=abs(position[i].second-mBox.y)){
+                        if ((position[i].first-mBox.x)>0){mVelX=DOT_VEL;}
+                        else {mVelX=-DOT_VEL;}
+                    }
+                    else{
+                        if((position[i].second-mBox.y)>0){mVelY=DOT_VEL;}
+                        else {mVelY=-DOT_VEL;}
 
-                if (position[i].second > mBox.y)
-                    mVelY = DOT_VEL;
-                else if (position[i].second < mBox.y)
-                    mVelY = -DOT_VEL;
-
+                    }
                 move(tiles, 0.01);
 
                 if (touch == 1) {
                     touch = 0;
                 } else {
+                    goUp = goDown = goRight = goLeft = 0;
+                    if(abs(position[i].first-mBox.x)>=abs(position[i].second-mBox.y)){
+                        if ((position[i].first-mBox.x)>0){lastDirection=0;goRight=1;}
+                        else {lastDirection=2;goLeft=1;}
+                    }
+                    else{
+                        if((position[i].second-mBox.y)>0){lastDirection=3;goDown=1;}
+                        else {lastDirection=0;goUp=1;}
+
+                    }
                     hasMoved = true;
                     break;
                 }
             }
+
+
         } else if (!hasMoved) {
             int moveCode = rand() % 600;
 
@@ -163,25 +179,25 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* positi
 
             touch = 0;
             move(tiles, 0.01);
-            if (touch == 1) {
-                touch = 0;
-                mVelX = -mVelX;
-                mVelY = -mVelY;
-            }
+
+            if(touchX){mVelX = -mVelX;}
+            if(touchY){mVelY = -mVelY;}
+
+
+            goUp = goDown = goRight = goLeft = 0;
+            if (mVelX > 0) { goRight = 1; lastDirection = 0; }
+            else if (mVelX < 0) { goLeft = 1; lastDirection = 2; }
+
+            if (mVelY > 0) { goDown = 1; lastDirection = 3; }
+            else if (mVelY < 0) { goUp = 1; lastDirection = 1; }
         }
+
     }
 
-    goUp = goDown = goRight = goLeft = 0;
-    if (mVelX > 0) { goRight = 1; lastDirection = 0; }
-    else if (mVelX < 0) { goLeft = 1; lastDirection = 2; }
-
-    if (mVelY > 0) { goDown = 1; lastDirection = 3; }
-    else if (mVelY < 0) { goUp = 1; lastDirection = 1; }
 }
 
 void Dot::move( Tile *tiles[], float timeStep )
  {
-
      //Move the dot left or right
      float i=(isRun()?1.5:1);
      float j=(isAttacking()?0.5:1); // nếu đang tấn công; tốc độ giảm đi
@@ -193,8 +209,9 @@ void Dot::move( Tile *tiles[], float timeStep )
      {
          //move back
          mBox.x -= X;
-         touch=1;
+         touchX=1;
      }
+     else{touchX=0;}
 
      //Move the dot up or down
      int Y=mVelY * timeStep *i*j;
@@ -205,9 +222,11 @@ void Dot::move( Tile *tiles[], float timeStep )
      {
          //move back
          mBox.y -=Y;
-         touch=1;
+         touchY=1;
      }
-
+     else{touchY=0;}
+     if(touchX && touchY)touch=1;
+     else{touch=0;}
     if(mHP<=0)dead=1;
  }
 
