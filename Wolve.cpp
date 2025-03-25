@@ -104,7 +104,7 @@ void wolve::render(SDL_Rect& camera)
     {
         Frame = 6;
 
-        if (mFrame >= 5.7) { dotWolve.SetAttacking(isAttack()); }
+        if (mFrame >= 5.85) { dotWolve.SetAttacking(isAttack()); }
         int x = (int)mFrame;
         int y = i;
         mFrame = fmod(double(mFrame + 0.1), double(Frame));

@@ -38,6 +38,12 @@ bool Character::loadMedia()
         success = false;
     }
 
+    if (!gHurt.loadFromFile("image/character/Sword_Hurt_full.png"))
+    {
+        printf("Failed to create Hurt texture!\n");
+        success = false;
+    }
+
     if (!gStreamingGo.createBlank(480, 320))
     {
         printf("Failed to create streamingGo texture!\n");
@@ -138,7 +144,7 @@ bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies, int weapon)  // dem
 
 void Character::move(Tile* tiles[], float timeStep)
 {
-    dotCharacter.move(tiles, timeStep);
+     dotCharacter.move(tiles, timeStep);
     std::stringstream path;
     path << (GetHP()) << "/" << dotCharacter.GetMaxHP();
     HP.free();
@@ -190,14 +196,15 @@ void Character::render(SDL_Rect& camera)
     HP.render(X + 40 - HP.getWidth() / 2 - HPTexture.getWidth() + 10, Y + 15);
 
     int hp;
-    if (GetHP() <= dotCharacter.GetMaxHP() * 1.0 / 8) hp = 0;
-    else if (GetHP() <= dotCharacter.GetMaxHP() * 2 * 1.0 / 8) hp = 1;
-    else if (GetHP() <= dotCharacter.GetMaxHP() * 3 * 1.0 / 8) hp = 2;
-    else if (GetHP() <= dotCharacter.GetMaxHP() * 4 * 1.0 / 8) hp = 3;
-    else if (GetHP() <= dotCharacter.GetMaxHP() * 5 * 1.0 / 8) hp = 4;
-    else if (GetHP() <= dotCharacter.GetMaxHP() * 6 * 1.0 / 8) hp = 5;
-    else if (GetHP() <= dotCharacter.GetMaxHP() * 7 * 1.0 / 8) hp = 6;
-    else if (GetHP() <= dotCharacter.GetMaxHP() * 8 * 1.0 / 8) hp = 7;
+    if(GetHP()==0)hp=0;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 1.0 / 8) hp = 1;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 2 * 1.0 / 8) hp = 2;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 3 * 1.0 / 8) hp = 3;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 4 * 1.0 / 8) hp = 4;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 5 * 1.0 / 8) hp = 5;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 6 * 1.0 / 8) hp = 6;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 7 * 1.0 / 8) hp = 7;
+    else if (GetHP() <= dotCharacter.GetMaxHP() * 8 * 1.0 / 8) hp = 8;
     SDL_Rect Clip = { 0, hp * 10, 80, 10 };
 
     HPTexture.render(X + 40 - HPTexture.getWidth() / 2, Y + 15, &Clip);
@@ -207,6 +214,7 @@ void Character::render(SDL_Rect& camera)
     else if (dotCharacter.isLeft()) i = 1;
     else if (dotCharacter.isUp()) i = 3;
     else i = 0;
+
 
     if (isDead()) {
         Frame = 16;
@@ -228,6 +236,15 @@ void Character::render(SDL_Rect& camera)
             NULL,
             SDL_FLIP_NONE
         );
+    }
+    else if (isHurt()){
+         Frame = 6;
+
+        if (mFrame >= 5.85) { dotCharacter.SetHurt(0);dotCharacter.SetTimeHurt(0); }   // sau này time hurt có thể dùng để làm sự thiêu đốt thể lực do độc
+        mFrame = fmod(double(mFrame + 0.1), double(Frame));
+        SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
+
+        gHurt.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
     }
     else if (isAttacking()) {
         Frame = 8;
@@ -315,6 +332,7 @@ void Character::setBlendMode(SDL_BlendMode blending)
     gStreamingRun.setBlendMode(blending);
     gStreamingDie.setBlendMode(blending);
     gStreamingAttack.setBlendMode(blending);
+    gHurt.setBlendMode(blending);
 }
 
 void Character::free()
@@ -327,6 +345,7 @@ void Character::free()
     gStreamingRun.free();
     gStreamingDie.free();
     gStreamingAttack.free();
+    gHurt.free();
     gDataStreamGo.free();
     gDataStreamStand.free();
     gDataStreamRun.free();

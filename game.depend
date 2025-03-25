@@ -1,24 +1,24 @@
 # depslib dependency file v1.0
-1742892182 source:c:\users\admin\onedrive\desktop\game\character.cpp
+1742905097 source:c:\users\admin\onedrive\desktop\game\character.cpp
 	"Character.h"
 
-1742892403 c:\users\admin\onedrive\desktop\game\character.h
+1742896932 c:\users\admin\onedrive\desktop\game\character.h
 	"Dot.h"
 	"DataStream.h"
 	<SDL.h>
 	<sstream>
 
-1742893206 c:\users\admin\onedrive\desktop\game\dot.h
+1742895925 c:\users\admin\onedrive\desktop\game\dot.h
 	<SDL.h>
 	<utility>
 	<cstdlib>
 	"Tile.h"
 
-1742883392 c:\users\admin\onedrive\desktop\game\tile.h
+1742922145 c:\users\admin\onedrive\desktop\game\tile.h
 	<SDL.h>
 	"LTexture.h"
 
-1742883392 c:\users\admin\onedrive\desktop\game\ltexture.h
+1742922590 c:\users\admin\onedrive\desktop\game\ltexture.h
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -26,7 +26,7 @@
 	"constant.h"
 	"need.h"
 
-1742885583 c:\users\admin\onedrive\desktop\game\constant.h
+1742923034 c:\users\admin\onedrive\desktop\game\constant.h
 	<SDL.h>
 	<SDL_mixer.h>
 	<SDL_ttf.h>
@@ -46,7 +46,7 @@
 	<cmath>
 	"need.h"
 
-1742883392 source:c:\users\admin\onedrive\desktop\game\constant.cpp
+1742923051 source:c:\users\admin\onedrive\desktop\game\constant.cpp
 	"constant.h"
 
 1742883392 source:c:\users\admin\onedrive\desktop\game\datastream.cpp
@@ -58,7 +58,7 @@
 	"Character.h"
 	<utility>
 
-1742883392 source:c:\users\admin\onedrive\desktop\game\ltexture.cpp
+1742922601 source:c:\users\admin\onedrive\desktop\game\ltexture.cpp
 	"LTexture.h"
 	<cstdio>
 	<cstring>
@@ -69,7 +69,7 @@
 1742883392 c:\users\admin\onedrive\desktop\game\ltimer.h
 	<SDL.h>
 
-1742892622 source:c:\users\admin\onedrive\desktop\game\main.cpp
+1742905525 source:c:\users\admin\onedrive\desktop\game\main.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -101,11 +101,11 @@
 1742883392 source:c:\users\admin\onedrive\desktop\game\slime.cpp
 	"Slime.h"
 
-1742883392 source:c:\users\admin\onedrive\desktop\game\tile.cpp
+1742923016 source:c:\users\admin\onedrive\desktop\game\tile.cpp
 	"Tile.h"
 	<SDL.h>
 	<fstream>
 
-1742893354 source:c:\users\admin\onedrive\desktop\game\wolve.cpp
+1742896517 source:c:\users\admin\onedrive\desktop\game\wolve.cpp
 	"Wolve.h"
 

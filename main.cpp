@@ -149,11 +149,16 @@
  	}
 
  	//Load tile texture
- 	if( !gTileTexture.loadFromFile( "image/tiles.png" ) )
- 	{
- 		printf( "Failed to load tile set texture!\n" );
- 		success = false;
- 	}
+ 	for (int i = 0; i < TOTAL_TILE_SPRITES ; ++i) {
+        std::ostringstream filename;
+        filename << std::setw(3) << std::setfill('0') << (i + 1) << ".png";  // Tạo tên file từ 001.png đến 104.png
+
+        // Gọi hàm loadFromFile cho từng texture
+        if (!gTileTexture[i].loadFromFile("image/objects/1 Tiles/" + filename.str())) {
+            printf("Failed to load texture: %s\n", filename.str().c_str());
+            success = false;
+        }
+    }
 
  	//Load tile map
  	if( !setTiles( tiles ) )
@@ -205,7 +210,10 @@
 
 
  	//Free loaded images
- 	gTileTexture.free();
+ 	for (int i = 0; i < TOTAL_TILE_SPRITES ; ++i) {
+        gTileTexture[i].free();
+ 	}
+
     gPauseTexture.free();
     gPassTexture.free();
     gRainTexture.free();

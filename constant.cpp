@@ -15,4 +15,3 @@ SDL_Renderer* gRenderer = NULL;   // The window renderer
 
 TTF_Font* gFont = NULL;           // Globally used font
 
-SDL_Rect gTileClips[TOTAL_TILE_SPRITES];  // Các clip cắt cho tile

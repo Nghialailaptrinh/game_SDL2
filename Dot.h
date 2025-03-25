@@ -49,7 +49,7 @@ public:
     bool isLeft() { return goLeft; }
     bool isUp() { return goUp; }
     bool isDown() { return goDown; }
-
+    bool isHurt() { return hurt;}
     bool isWalk() { return walk; }
     bool isRun() { return run; }
     bool isDead() { return dead; }

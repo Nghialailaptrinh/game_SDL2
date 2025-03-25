@@ -13,14 +13,14 @@ const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 500;
 
 // The dimensions of the level
-const int LEVEL_WIDTH = 1280;
-const int LEVEL_HEIGHT = 960;
+const int LEVEL_WIDTH = 1600;
+const int LEVEL_HEIGHT = 1600;
 
 // Tile constants
-const int TILE_WIDTH = 80;
-const int TILE_HEIGHT = 80;
-const int TOTAL_TILES = 192;
-const int TOTAL_TILE_SPRITES = 12;
+const int TILE_WIDTH = 32;
+const int TILE_HEIGHT = 32;
+const int TOTAL_TILES = 2500;
+const int TOTAL_TILE_SPRITES = 104;
 
  //The different tile sprites
  const int TILE_RED = 0;
@@ -59,7 +59,6 @@ extern SDL_Renderer* gRenderer ;
 //Globally used font
 extern TTF_Font* gFont ;
 
-extern SDL_Rect gTileClips[TOTAL_TILE_SPRITES];  // Các clip cắt cho tile
 
 
 

@@ -25,7 +25,7 @@ public:
     bool isLeft() { return dotCharacter.isLeft(); }
     bool isUp() { return dotCharacter.isUp(); }
     bool isDown() { return dotCharacter.isDown(); }
-
+    bool isHurt() {return dotCharacter.isHurt(); }
     bool isWalk() { return dotCharacter.isWalk(); }
     bool isRun() { return dotCharacter.isRun(); }
     void setBlendMode(SDL_BlendMode blending);
@@ -39,6 +39,7 @@ public:
 
 private:
     Dot dotCharacter;
+    float mFrame=0;
 
     // Scene textures
     LTexture mName;
@@ -49,6 +50,7 @@ private:
     LTexture gStreamingRun;
     LTexture gStreamingDie;
     LTexture gStreamingAttack;
+    LTexture gHurt;
 
     // Animation stream
     DataStream gDataStreamGo;

@@ -6,10 +6,11 @@
 
  //Scene textures
  LTexture gDotTexture; //thuận tiện test thay vì dùng hoạt ảnh
- LTexture gTileTexture;
  LTexture gPauseTexture; // kết thúc;
  LTexture gPassTexture;
  LTexture gRainTexture; // thời tiết;
+ LTexture gTileTexture[103];
+
 
 LTexture::LTexture()
     : mTexture(nullptr), mSurfacePixels(nullptr), mRawPixels(nullptr), mRawPitch(0),
