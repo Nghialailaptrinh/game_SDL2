@@ -144,26 +144,26 @@ void Character::move(Tile* tiles[], float timeStep)
         printf("Failed to create HP texture!\n");
     }
 
-    static bool isRunMusicPlaying = false, isWalkMusicPlaying = false;
+    static bool isRunMusicPlaying = false;
     if (dotCharacter.isRun() && dotCharacter.isWalk()) {
         if (Mix_PlayingMusic() == 0 || (Mix_PlayingMusic() && !isRunMusicPlaying)) {
             Mix_PlayMusic(gRun, -1);
             isRunMusicPlaying = true;
-            isWalkMusicPlaying = false;
+
         }
     }
     else if (dotCharacter.isWalk()) {
         if (Mix_PlayingMusic() == 0 || (Mix_PlayingMusic() && isRunMusicPlaying)) {
             Mix_PlayMusic(gGo, -1);
             isRunMusicPlaying = false;
-            isWalkMusicPlaying = true;
+
         }
     }
     else {
         if (Mix_PlayingMusic() != 0) {
             Mix_HaltMusic();
             isRunMusicPlaying = false;
-            isWalkMusicPlaying = false;
+
         }
     }
 }
