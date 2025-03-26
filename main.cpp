@@ -180,7 +180,7 @@
 		success = false;
 	}
 	gRain = Mix_LoadWAV( "audio/rain.mp3" );
-    if( gRun == NULL )
+    if( gRain == NULL )
 	{
 		printf( "Failed to load rain music! SDL_mixer Error: %s\n", Mix_GetError() );
 		success = false;
@@ -196,56 +196,48 @@
  	return success;
  }
 
- void close( Tile* tiles[] )
- {
- 	//Deallocate tiles
- 	for( int i = 0; i < TOTAL_TILES; ++i )
- 	{
- 		 if( tiles[ i ] != NULL )
- 		 {
- 			delete tiles[ i ];
- 			tiles[ i ] = NULL;
- 		 }
- 	}
+ void close(Tile* tiles[]) {
+    // Giải phóng bộ nhớ cho từng Tile trong mảng
+    for (int i = 0; i < TOTAL_TILES; ++i) {
+        if (tiles[i] != nullptr) {
+            delete tiles[i];  // Giải phóng bộ nhớ của Tile[i]
+            tiles[i] = nullptr;  // Đặt lại con trỏ về nullptr để tránh sử dụng lại
+        }
+    }
 
-
- 	//Free loaded images
- 	for (int i = 0; i < TOTAL_TILE_SPRITES ; ++i) {
-        gTileTexture[i].free();
- 	}
-
+    // Giải phóng các tài nguyên khác (như texture, âm thanh)
     gPauseTexture.free();
     gPassTexture.free();
     gRainTexture.free();
+    gCharacter.free();
 
- 	gCharacter.free();
+    // Giải phóng bộ nhớ cho các đối tượng khác như gTileTexture, gFont, v.v.
+    for (int i = 0; i < TOTAL_TILE_SPRITES; ++i) {
+        gTileTexture[i].free();
+    }
 
- 	//Destroy window
- 	SDL_DestroyRenderer( gRenderer );
- 	SDL_DestroyWindow( gWindow );
- 	gWindow = NULL;
- 	gRenderer = NULL;
-
- 	//Free global font
-	TTF_CloseFont( gFont );
-	gFont = NULL;
-
-	Mix_FreeChunk(gSword);
-	gSword=NULL;
+    // Giải phóng các tài nguyên SDL
+    SDL_DestroyRenderer(gRenderer);
+    SDL_DestroyWindow(gWindow);
+    gWindow = nullptr;
+    gRenderer = nullptr;
+    TTF_CloseFont(gFont);
+    gFont = nullptr;
+    Mix_FreeChunk(gSword);
+    gSword = nullptr;
     Mix_FreeMusic(gRun);
     Mix_FreeMusic(gGo);
     Mix_FreeChunk(gRain);
+    gRun = nullptr;
+    gGo = nullptr;
+    gRain = nullptr;
 
-    gRun=NULL;
-    gGo=NULL;
-    gRain=NULL;
-
- 	//Quit SDL subsystems
- 	Mix_Quit();
- 	TTF_Quit();
- 	IMG_Quit();
- 	SDL_Quit();
- }
+    // Quit SDL subsystems
+    Mix_Quit();
+    TTF_Quit();
+    IMG_Quit();
+    SDL_Quit();
+}
 
 
  bool handleEvent(SDL_Event &e, Character &character,  bool &quit) {        // ta dùng bool để check xem sự kiện có phải sự kiện thóat không
@@ -269,10 +261,11 @@
             }
         }
     }
+    printf("%d\n",(bool)waitingForQuit);
     return waitingForQuit;
 }
 
- bool renderPass(Dot* dotEnemy[], int numEnemies) {
+ bool renderPass(Dot** dotEnemy, int numEnemies) {
     bool render = true;
 
     // Kiểm tra xem có kẻ địch nào còn sống không
@@ -291,10 +284,11 @@
     return render;
 }
 
-slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& dotSlime) { // tạo mảng slime và mảng dot cảu nó
-    std::ifstream file(filename); // Mở file
+// Trong hàm createSlimesFromFile
+slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& dotSlime) {
+    std::ifstream file(filename);
     if (!file) {
-       printf("Failed to open the file!\n");
+        printf("Không thể mở file!\n");
         return nullptr;
     }
 
@@ -310,71 +304,105 @@ slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& 
     for (int i = 0; i < numSlime; ++i) {
         file >> x >> y;
         Slime[i] = new slime(x, y);  // Tạo slime mới tại vị trí (x, y)
-        if(i==0) Slime[i]->loadMedia();
+        if (i == 0) {
+            if (!Slime[i]->loadMedia()) {
+                // Giải phóng tài nguyên đã cấp phát nếu loadMedia thất bại
+                for (int j = 0; j < i; ++j) {
+                    delete Slime[j];
+                }
+                delete[] Slime;
+                delete[] dotSlime;
+                return nullptr; // Trả về nullptr để chỉ ra có lỗi
+            }
+        }
         dotSlime[i] = Slime[i]->GetDot();  // Cập nhật Dot* của slime vào mảng dotSlime
     }
 
     // Đóng file
     file.close();
 
-    return Slime; // Trả về mảng các con trỏ slime*
+    return Slime;
 }
 
-void freeSlimes(slime** Slime, Dot** dotSlime, int numSlime)  // hàm xóa
-{
+
+// Trong hàm freeSlimes
+void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime) {
+    // Giải phóng bộ nhớ cho từng slime và dotSlime
     for (int i = 0; i < numSlime; ++i) {
-        Slime[i]->free();  // Gọi free() để giải phóng tài nguyên của slime
-        //delete dotSlime[i];
-        delete Slime[i];  // Giải phóng bộ nhớ cho đối tượng slime
+        if (Slime[i] != nullptr) {
+            // Không giải phóng dotSlime[i] vì nó được quản lý bởi slime
+            Slime[i]->free();  // Giải phóng tài nguyên của slime (sẽ tự giải phóng Dot nếu cần)
+            delete Slime[i];   // Giải phóng bộ nhớ cho đối tượng slime
+            Slime[i] = nullptr; // Đặt lại con trỏ về nullptr
+        }
     }
-    delete[] Slime;  // Giải phóng mảng chứa các con trỏ slime
 
-    delete[] dotSlime;  // Giải phóng mảng Dot* sau khi không còn sử dụng
+    // Giải phóng texture static của slime (chỉ cần giải phóng một lần)
+    slime::freeStaticTextures();
+    // Giải phóng mảng chứa các con trỏ slime
+    delete[] Slime;
+
+    // Không cần giải phóng dotSlime vì mỗi Dot thuộc về một slime và sẽ được giải phóng khi slime bị hủy
+    delete[] dotSlime;
+
+    // Đặt lại số lượng slime
+    numSlime = 0;
 }
 
-
-
-wolve** createVolvesFromFile(const std::string& filename, int& numWolve, Dot**& dotWolve) {
+wolve** createWolvesFromFile(const std::string& filename, int& numWolve, Dot**& dotWolve) {
     std::ifstream file(filename);
     if (!file) {
-       printf("Failed to open the file!\n");
+        printf("Không thể mở file!\n");
         return nullptr;
     }
 
-
+    // Đọc số lượng wolve
     file >> numWolve;
 
+    // Tạo mảng chứa các con trỏ wolve* và mảng chứa Dot* cho wolve
     wolve** Wolve = new wolve*[numWolve];
-    dotWolve = new Dot*[numWolve];
+    dotWolve = new Dot*[numWolve];  // Cấp phát mảng Dot* tương ứng
 
+    // Đọc vị trí của các wolve từ file và tạo các đối tượng wolve
     int x, y;
     for (int i = 0; i < numWolve; ++i) {
         file >> x >> y;
-        Wolve[i] = new wolve(x, y);
-        if(i==0) Wolve[i]->loadMedia(); // ta chỉ cần load ảnh của 1 kẻ địch vì static
-        dotWolve[i] = Wolve[i]->GetDot();
+        Wolve[i] = new wolve(x, y);  // Tạo wolve mới tại vị trí (x, y)
+        if (i == 0) Wolve[i]->loadMedia();
+        dotWolve[i] = Wolve[i]->GetDot();  // Cập nhật Dot* của wolve vào mảng dotWolve
     }
 
-
+    // Đóng file
     file.close();
 
     return Wolve;
 }
 
-void freeWolves(wolve** Wolve, Dot** dotWolve, int numWolve)
-{
+void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve) {
+    // Giải phóng bộ nhớ cho từng wolve và dotWolve
     for (int i = 0; i < numWolve; ++i) {
-        Wolve[i]->free(); // ta cũng chỉ cần free 1 kẻ địch
-        //delete dotWolve[i];
-        delete Wolve[i];
+        if (Wolve[i] != nullptr) {
+            // Không giải phóng dotWolve[i] vì nó được quản lý bởi wolve
+            Wolve[i]->free();  // Giải phóng tài nguyên của wolve (sẽ tự giải phóng Dot nếu cần)
+            delete Wolve[i];   // Giải phóng bộ nhớ cho đối tượng wolve
+            Wolve[i] = nullptr; // Đặt lại con trỏ về nullptr
+        }
     }
+
+    // Giải phóng texture static của wolve (chỉ cần giải phóng một lần)
+    wolve::freeStaticTextures();
+    // Giải phóng mảng chứa các con trỏ wolve
     delete[] Wolve;
 
+    // Không cần giải phóng dotWolve vì mỗi Dot thuộc về một wolve và sẽ được giải phóng khi wolve bị hủy
     delete[] dotWolve;
+
+    // Đặt lại số lượng wolve
+    numWolve = 0;
 }
 
 // Hàm xử lý mưa
-void handleRain(Uint32 frameStart) {
+void handleRain(Uint32 &frameStart) {
     static bool isRaining = false;  // Biến theo dõi trạng thái mưa
     static float frameRain = 0;
 
@@ -457,7 +485,7 @@ int main( int argc, char* args[] )
             // Level camera
             SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
-            wolve** Wolve=createVolvesFromFile("save_game/Slime1.txt",numWolve,dotWolve);
+            wolve** Wolve=createWolvesFromFile("save_game/Slime1.txt",numWolve,dotWolve);
             slime** Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
             std::pair<int,int>* position = createPositionArray(20);
 
@@ -528,7 +556,6 @@ int main( int argc, char* args[] )
                 handleRain(frameStart);
 
 
-
                 if(renderPass(dotWolve, numWolve)&&renderPass(dotSlime,numSlime)){
                     renderP++;
                     gPassTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
@@ -552,7 +579,9 @@ int main( int argc, char* args[] )
 
             // Free resources and close SDL
             freeSlimes(Slime, dotSlime, numSlime);
+
             freeWolves(Wolve,dotWolve,numWolve);
+
             close(tileSet);
         }
     }

@@ -27,6 +27,16 @@ public:
     void setBlendMode(SDL_BlendMode blending);
     void free();
 
+    static void freeStaticTextures() {
+        if (!isStaticTexturesFreed) { // Kiểm tra xem đã giải phóng chưa
+            mName.free();
+            gStreamingGo.free();
+            gStreamingAttack.free();
+            gStreamingDie.free();
+            isStaticTexturesFreed = true; // Đánh dấu đã giải phóng
+        }
+    }
+
     int GetHP() { return dotSlime.GetHP(); }
     bool isDead() { return dotSlime.isDead(); }
     bool isDie() { return dotSlime.isDie(); }
@@ -42,6 +52,8 @@ private:
     static LTexture gStreamingGo;
     static LTexture gStreamingAttack;
     static LTexture gStreamingDie;
+
+    static bool isStaticTexturesFreed;  // Cờ kiểm tra trạng thái đã giải phóng
 };
 
 extern int numSlime;

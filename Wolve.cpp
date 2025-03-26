@@ -134,11 +134,7 @@ void wolve::setBlendMode(SDL_BlendMode blending)
 
 void wolve::free()
 {
-    mName.free();
     HP.free();
-    gStreamingGo.free();
-    gStreamingAttack.free();
-    gStreamingDie.free();
 }
 
 bool wolve::attackEnemy(){

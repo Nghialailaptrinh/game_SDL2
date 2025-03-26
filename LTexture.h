@@ -60,5 +60,5 @@ private:
  extern LTexture gPassTexture;
  extern LTexture gRainTexture; // thời tiết;
 
- extern LTexture gTileTexture[103]; // gạch;
+ extern LTexture gTileTexture[104]; // gạch;
 #endif // LTEXTURE_H_INCLUDED

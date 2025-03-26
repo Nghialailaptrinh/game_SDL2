@@ -6,7 +6,7 @@ LTexture slime::gStreamingGo;
 LTexture slime::gStreamingAttack;
 LTexture slime::gStreamingDie;
 int numSlime;
-
+bool slime::isStaticTexturesFreed = false;
 slime::slime(int x, int y) : dotSlime(x, y, 1)
 {
     dotSlime.setVel(100);
@@ -116,9 +116,5 @@ void slime::setBlendMode(SDL_BlendMode blending)
 
 void slime::free()
 {
-    mName.free();
     HP.free();
-    gStreamingGo.free();
-    gStreamingAttack.free();
-    gStreamingDie.free();
 }

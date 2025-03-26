@@ -9,7 +9,7 @@
  LTexture gPauseTexture; // kết thúc;
  LTexture gPassTexture;
  LTexture gRainTexture; // thời tiết;
- LTexture gTileTexture[103];
+ LTexture gTileTexture[104];
 
 
 LTexture::LTexture()
@@ -72,8 +72,6 @@ bool LTexture::loadFromPixels(Uint8 red, Uint8 green, Uint8 blue) {
         return false;
     }
 
-    SDL_FreeSurface(mSurfacePixels);
-    mSurfacePixels = nullptr;
     return true;
 }
 
@@ -114,16 +112,18 @@ bool LTexture::createBlank(int width, int height) {
 }
 
 void LTexture::free() {
-    if (mTexture) {
-        SDL_DestroyTexture(mTexture);
-        mTexture = nullptr;
+    if (mTexture != nullptr) {
+        SDL_DestroyTexture(mTexture);  // Giải phóng texture
+        mTexture = nullptr;  // Đặt lại con trỏ về nullptr để tránh lỗi trỏ đến bộ nhớ đã giải phóng
     }
-    if (mSurfacePixels) {
-        SDL_FreeSurface(mSurfacePixels);
-        mSurfacePixels = nullptr;
+    if (mSurfacePixels != nullptr) {
+        SDL_FreeSurface(mSurfacePixels);  // Giải phóng surface
+        mSurfacePixels = nullptr;  // Đặt lại con trỏ về nullptr
     }
-    mWidth = mHeight = 0;
+    mWidth = 0;  // Đặt lại chiều rộng
+    mHeight = 0;  // Đặt lại chiều cao
 }
+
 
 void LTexture::setColor(Uint8 red, Uint8 green, Uint8 blue) {
     SDL_SetTextureColorMod(mTexture, red, green, blue);

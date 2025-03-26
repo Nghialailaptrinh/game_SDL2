@@ -3,8 +3,8 @@
 #include <utility>  // Để sử dụng std::pair
 
 
-Dot** dotSlime;
-Dot** dotWolve;
+Dot** dotSlime=nullptr;
+Dot** dotWolve=nullptr;
 
 
  Dot::Dot(int x,int y,int typeE)

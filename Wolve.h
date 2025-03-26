@@ -10,7 +10,7 @@ class wolve
 {
 public:
     wolve(int x = 50, int y = 50);
-    ~wolve() { free(); }
+    ~wolve() { free();}
 
     bool loadMedia();
     void AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* position = nullptr);
@@ -28,6 +28,12 @@ public:
     void setBlendMode(SDL_BlendMode blending);
     bool attackEnemy();
     void free();
+    static void freeStaticTextures() {
+        mName.free();
+        gStreamingGo.free();
+        gStreamingAttack.free();
+        gStreamingDie.free();
+    }
     int GetHP() { return dotWolve.GetHP(); }
     bool isDead() { return dotWolve.isDead(); }
     bool isDie() { return dotWolve.isDie(); }
