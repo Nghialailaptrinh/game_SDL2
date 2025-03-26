@@ -20,7 +20,7 @@ const int LEVEL_HEIGHT = 1600;
 const int TILE_WIDTH = 32;
 const int TILE_HEIGHT = 32;
 const int TOTAL_TILES = 2500;
-const int TOTAL_TILE_SPRITES = 104;
+const int TOTAL_TILE_SPRITES = 142;
 
  //The different tile sprites
  const int TILE_RED = 0;
@@ -38,7 +38,7 @@ const int TOTAL_TILE_SPRITES = 104;
 
 
 // Store the frame rate target
-const int FPS = 50;
+const int FPS = 60;
 const int frameDelay = 1000 / FPS;  // Delay per frame to reach 60 FPS (in milliseconds)
 
 extern SDL_Color nameColor ;
@@ -59,7 +59,6 @@ extern SDL_Renderer* gRenderer ;
 //Globally used font
 extern TTF_Font* gFont ;
 
-
-
+const int MaxLevel=1; // game chỉ mới có 1 màn
 
 #endif // CONSTANT_H_INCLUDED

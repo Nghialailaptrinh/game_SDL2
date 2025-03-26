@@ -39,6 +39,8 @@ public:
     int GetY() { return mBox.y; }
     int GetDameSword() { return dameSword; }
     int GetMaxHP() { return maxHP; }
+    void SetX(int X){mBox.x=X;}
+    void SetY (int Y) {mBox.y=Y;}              // demo kĩ năng dịch chuyển
     void SetHP(int HP) { mHP = HP; }
     void SetMaxHP(int MaxHP) { maxHP = MaxHP; }
     void SetDameSword(int dame) { dameSword = dame; }

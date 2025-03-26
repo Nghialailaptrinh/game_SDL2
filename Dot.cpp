@@ -51,7 +51,7 @@ Dot** dotWolve=nullptr;
              case SDLK_LEFT: case SDLK_a : mVelX -= DOT_VEL; break;
              case SDLK_RIGHT: case SDLK_d : mVelX += DOT_VEL;  break;
              case SDLK_LSHIFT: run=1; break;
-             case SDLK_j: attack=1; break;
+             case SDLK_j: case SDLK_SPACE: attack=1; break;
          }
 
      }
@@ -67,7 +67,7 @@ Dot** dotWolve=nullptr;
              case SDLK_DOWN: case SDLK_s : mVelY -= DOT_VEL; break;
              case SDLK_LEFT: case SDLK_a : mVelX += DOT_VEL; break;
              case SDLK_RIGHT: case SDLK_d :  mVelX -= DOT_VEL; break;
-             case SDLK_j: attack=0;break;
+             case SDLK_j: case SDLK_SPACE      : attack=0;break;
          }
      }
 

@@ -9,7 +9,13 @@
  LTexture gPauseTexture; // kết thúc;
  LTexture gPassTexture;
  LTexture gRainTexture; // thời tiết;
- LTexture gTileTexture[104];
+ LTexture gTileTexture[TOTAL_TILE_SPRITES];
+ LTexture OpenTexture;
+ LTexture OpenTexture1;
+ LTexture texture1;
+ LTexture texture2;
+ LTexture texture3;
+ LTexture texture4;
 
 
 LTexture::LTexture()

@@ -15,3 +15,4 @@ SDL_Renderer* gRenderer = NULL;   // The window renderer
 
 TTF_Font* gFont = NULL;           // Globally used font
 
+

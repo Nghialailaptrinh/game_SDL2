@@ -1,14 +1,13 @@
 # depslib dependency file v1.0
-1742905097 source:c:\users\admin\onedrive\desktop\game\character.cpp
+1742998544 source:c:\users\admin\onedrive\desktop\game\character.cpp
 	"Character.h"
 
-1742896932 c:\users\admin\onedrive\desktop\game\character.h
+1742998729 c:\users\admin\onedrive\desktop\game\character.h
 	"Dot.h"
-	"DataStream.h"
 	<SDL.h>
 	<sstream>
 
-1742895925 c:\users\admin\onedrive\desktop\game\dot.h
+1742970589 c:\users\admin\onedrive\desktop\game\dot.h
 	<SDL.h>
 	<utility>
 	<cstdlib>
@@ -18,7 +17,7 @@
 	<SDL.h>
 	"LTexture.h"
 
-1742960092 c:\users\admin\onedrive\desktop\game\ltexture.h
+1742981741 c:\users\admin\onedrive\desktop\game\ltexture.h
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -26,7 +25,7 @@
 	"constant.h"
 	"need.h"
 
-1742923034 c:\users\admin\onedrive\desktop\game\constant.h
+1742982131 c:\users\admin\onedrive\desktop\game\constant.h
 	<SDL.h>
 	<SDL_mixer.h>
 	<SDL_ttf.h>
@@ -46,19 +45,19 @@
 	<cmath>
 	"need.h"
 
-1742923051 source:c:\users\admin\onedrive\desktop\game\constant.cpp
+1742982140 source:c:\users\admin\onedrive\desktop\game\constant.cpp
 	"constant.h"
 
-1742883392 source:c:\users\admin\onedrive\desktop\game\datastream.cpp
+1742997537 source:c:\users\admin\onedrive\desktop\game\datastream.cpp
 	"DataStream.h"
 	<cstdio>
 
-1742944461 source:c:\users\admin\onedrive\desktop\game\dot.cpp
+1742975758 source:c:\users\admin\onedrive\desktop\game\dot.cpp
 	"Dot.h"
 	"Character.h"
 	<utility>
 
-1742960103 source:c:\users\admin\onedrive\desktop\game\ltexture.cpp
+1742981741 source:c:\users\admin\onedrive\desktop\game\ltexture.cpp
 	"LTexture.h"
 	<cstdio>
 	<cstring>
@@ -69,7 +68,7 @@
 1742883392 c:\users\admin\onedrive\desktop\game\ltimer.h
 	<SDL.h>
 
-1742962448 source:c:\users\admin\onedrive\desktop\game\main.cpp
+1743000410 source:c:\users\admin\onedrive\desktop\game\main.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -101,7 +100,7 @@
 1742950459 source:c:\users\admin\onedrive\desktop\game\slime.cpp
 	"Slime.h"
 
-1742923016 source:c:\users\admin\onedrive\desktop\game\tile.cpp
+1742973827 source:c:\users\admin\onedrive\desktop\game\tile.cpp
 	"Tile.h"
 	<SDL.h>
 	<fstream>

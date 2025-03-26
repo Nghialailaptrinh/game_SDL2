@@ -3,6 +3,16 @@
 #include <fstream>
 
 
+int CantMove[18]={64,67,68,69,74,75,76,77,78,79,86,88,91,93,94,97,98,101}; // các loại gạch ko đi qua được
+bool canMove(int tileType){
+    bool Cmove=true;
+for(int i=0;i<18;i++){
+    if(tileType==CantMove[i] ||tileType>=101){Cmove=false;break;}
+}
+   return Cmove;
+}
+
+
 Tile::Tile(int x, int y, int tileType)
 {
     mBox.x = x;
@@ -17,6 +27,7 @@ void Tile::render(SDL_Rect& camera)
 {
     if (checkCollision(camera, mBox))
     {
+        if(mType>=104)gTileTexture[37].render(mBox.x - camera.x, mBox.y - camera.y);
         gTileTexture[mType].render(mBox.x - camera.x, mBox.y - camera.y);
     }
 }
@@ -37,7 +48,7 @@ bool touchesWall( SDL_Rect box, Tile* tiles[] )
      for( int i = 0; i < TOTAL_TILES; ++i )
      {
          //If the tile is a wall type tile
-         if( ( tiles[ i ]->getType() >= TILE_CENTER ) && ( tiles[ i ]->getType() <= TILE_TOPLEFT ) )
+         if( !canMove(tiles[i]->getType()))   // nếu là loại gạch không thể đi qua
          {
              //If the collision box touches the wall tile
              if( checkCollision( box, tiles[ i ]->getBox() ) )

@@ -6,8 +6,8 @@ Dot* dotCharacter = gCharacter.GetDot(); // Tạo con trỏ chỉ đến đối 
 Dot* dotCharacter0[1] = {dotCharacter}; // Gán trực tiếp con trỏ vào mảng
 
 
-Character::Character()
-    : gDataStreamGo(1), gDataStreamStand(1), gDataStreamRun(1), gDataStreamDie(1), gDataStreamAttack(1)
+Character::Character(int x,int y)
+    : dotCharacter(x,y)
 {
     dotCharacter.SetMaxHP(200);
     dotCharacter.SetHP(dotCharacter.GetMaxHP());
@@ -44,87 +44,32 @@ bool Character::loadMedia()
         success = false;
     }
 
-    if (!gStreamingGo.createBlank(480, 320))
+    if (!gStreamingGo.loadFromFile("image/character/Walk_full_00.png"))
     {
         printf("Failed to create streamingGo texture!\n");
         success = false;
     }
-    if (!gStreamingStand.createBlank(960, 320))
+    if (!gStreamingStand.loadFromFile("image/character/Sword_Idle_full_00.png"))
     {
         printf("Failed to create streamingStand texture!\n");
         success = false;
     }
-    if (!gStreamingRun.createBlank(640, 320))
+    if (!gStreamingRun.loadFromFile("image/character/Sword_Run_full_00.png"))
     {
         printf("Failed to create streamingRun texture!\n");
         success = false;
     }
-    if (!gStreamingDie.createBlank(560, 320))
+    if (!gStreamingDie.loadFromFile("image/character/Sword_Death_full_00.png"))
     {
         printf("Failed to create streamingDie texture!\n");
         success = false;
     }
-    if (!gStreamingAttack.createBlank(640, 320))
+    if (!gStreamingAttack.loadFromFile("image/character/Sword_Attack_full_00.png"))
     {
         printf("Failed to create streamingAttack texture!\n");
         success = false;
     }
 
-    // Load data stream
-    if (!gDataStreamGo.loadMedia("image/character/Walk_full_"))
-    {
-        printf("Unable to load data streamGo!\n");
-        success = false;
-    }
-    else {
-        gStreamingGo.lockTexture();
-        gStreamingGo.copyRawPixels32(gDataStreamGo.getBuffer());
-        gStreamingGo.unlockTexture();
-    }
-
-    if (!gDataStreamStand.loadMedia("image/character/Sword_Idle_full_"))
-    {
-        printf("Unable to load data streamStand!\n");
-        success = false;
-    }
-    else {
-        gStreamingStand.lockTexture();
-        gStreamingStand.copyRawPixels32(gDataStreamStand.getBuffer());
-        gStreamingStand.unlockTexture();
-    }
-
-    if (!gDataStreamRun.loadMedia("image/character/Sword_Run_full_"))
-    {
-        printf("Unable to load data streamRun!\n");
-        success = false;
-    }
-    else {
-        gStreamingRun.lockTexture();
-        gStreamingRun.copyRawPixels32(gDataStreamRun.getBuffer());
-        gStreamingRun.unlockTexture();
-    }
-
-    if (!gDataStreamDie.loadMedia("image/character/Sword_Death_full_"))
-    {
-        printf("Unable to load data streamDie!\n");
-        success = false;
-    }
-    else {
-        gStreamingDie.lockTexture();
-        gStreamingDie.copyRawPixels32(gDataStreamDie.getBuffer());
-        gStreamingDie.unlockTexture();
-    }
-
-    if (!gDataStreamAttack.loadMedia("image/character/Sword_Attack_full_"))
-    {
-        printf("Unable to load data streamAttack!\n");
-        success = false;
-    }
-    else {
-        gStreamingAttack.lockTexture();
-        gStreamingAttack.copyRawPixels32(gDataStreamAttack.getBuffer());
-        gStreamingAttack.unlockTexture();
-    }
 
     return success;
 }
@@ -137,9 +82,9 @@ void Character::handleEvent(SDL_Event& e)
 bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies, int weapon)  // demo weapon 1 laf kiến; mỗi vũ khí có tầm đánh và sát thương khác nhau
 {     if(weapon==1)dotCharacter.SetDameSword(50);
     int attackRange ;if(weapon==1)attackRange =50;
-    if (gDataStreamAttack.FgetCurrentFrame() >= 2.9 && gDataStreamAttack.FgetCurrentFrame() <= 3)
+    if (mFrame >= 2.85 && mFrame <= 3&& isAttacking())
         Mix_PlayChannel(-1, gSword, 0);
-    return dotCharacter.attackEnemy(dotEnemy, numEnemies, attackRange, gDataStreamAttack.FgetCurrentFrame() >= 4.85 && gDataStreamAttack.FgetCurrentFrame() <= 5.05);
+    return dotCharacter.attackEnemy(dotEnemy, numEnemies, attackRange, mFrame >= 4.85 && mFrame <= 5.05 && isAttacking());
 }
 
 void Character::move(Tile* tiles[], float timeStep)
@@ -218,29 +163,21 @@ void Character::render(SDL_Rect& camera)
 
     if (isDead()) {
         Frame = 16;
-        gDataStreamDie.upCurrentFrame(Frame);
-        if (gDataStreamDie.FgetCurrentFrame() >= Frame - 0.2) {
-            dotCharacter.SetDie(1);
-            printf("died \n");
-        }
-        int x = (gDataStreamDie.getCurrentFrame() % Frame) / 2;
-        int y = gDataStreamDie.getCurrentFrame() / Frame + i;
 
-        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
 
-        gStreamingDie.render(
-            X,
-            Y + 5,
-            &clip,
-            0,
-            NULL,
-            SDL_FLIP_NONE
-        );
+        if (mFrame >= 15.85) { dotCharacter.SetDie(0); }   // sau này time hurt có thể dùng để làm sự thiêu đốt thể lực do độc
+        mFrame = fmod(double(mFrame + 0.1), double(Frame));
+        SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
+
+        gStreamingDie.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
+
+
+
     }
     else if (isHurt()){
          Frame = 6;
 
-        if (mFrame >= 5.85) { dotCharacter.SetHurt(0);dotCharacter.SetTimeHurt(0); }   // sau này time hurt có thể dùng để làm sự thiêu đốt thể lực do độc
+        if (mFrame >= 5.85) { dotCharacter.SetHurt(0);dotCharacter.SetTimeHurt(0); }
         mFrame = fmod(double(mFrame + 0.1), double(Frame));
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
@@ -248,79 +185,42 @@ void Character::render(SDL_Rect& camera)
     }
     else if (isAttacking()) {
         Frame = 8;
-        gDataStreamAttack.upCurrentFrame(Frame);
-        gDataStreamAttack.upCurrentFrame(Frame);
-        if (gDataStreamAttack.FgetCurrentFrame() >= Frame - 0.2) {
-            dotCharacter.SetAttacking(isAttack());
-        }
-        int x = gDataStreamAttack.getCurrentFrame() % Frame;
-        int y = gDataStreamAttack.getCurrentFrame() / Frame + i;
 
-        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
 
-        gStreamingAttack.render(
-            X,
-            Y + 5,
-            &clip,
-            0,
-            NULL,
-            SDL_FLIP_NONE
-        );
+        if (mFrame >= 7.75) { dotCharacter.SetAttacking(isAttack()); }
+        mFrame = fmod(double(mFrame + 0.2), double(Frame));
+        SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
+
+        gStreamingAttack.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
+
     }
     else if (dotCharacter.isRun() && dotCharacter.isWalk()) {
         Frame = 8;
-        gDataStreamRun.upCurrentFrame(Frame);
-        gDataStreamRun.upCurrentFrame(Frame);
 
-        int x = gDataStreamRun.getCurrentFrame() % Frame;
-        int y = gDataStreamRun.getCurrentFrame() / Frame + i;
+        mFrame = fmod(double(mFrame + 0.1), double(Frame));
+        SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
-        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
+        gStreamingRun.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
 
-        gStreamingRun.render(
-            X,
-            Y + 5,
-            &clip,
-            0,
-            NULL,
-            SDL_FLIP_NONE
-        );
+
     }
     else if (dotCharacter.isWalk()) {
         Frame = 6;
-        gDataStreamGo.upCurrentFrame(Frame);
 
-        int x = gDataStreamGo.getCurrentFrame() % Frame;
-        int y = gDataStreamGo.getCurrentFrame() / Frame + i;
+        mFrame = fmod(double(mFrame + 0.1), double(Frame));
+        SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
-        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
+        gStreamingGo.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
 
-        gStreamingGo.render(
-            X,
-            Y + 5,
-            &clip,
-            0,
-            NULL,
-            SDL_FLIP_NONE
-        );
     }
     else {
         Frame = (dotCharacter.isUp() ? 4 : 12);
-        gDataStreamStand.upCurrentFrame(Frame);
 
-        int x = gDataStreamStand.getCurrentFrame() % Frame;
-        int y = gDataStreamStand.getCurrentFrame() / Frame + i;
+        mFrame = fmod(double(mFrame + 0.1), double(Frame));
+        SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
-        SDL_Rect clip = { x * 80, y * 80, 80, 80 };
+        gStreamingStand.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
 
-        gStreamingStand.render(
-            X,
-            Y + 5,
-            &clip,
-            0,
-            NULL,
-            SDL_FLIP_NONE
-        );
     }
 }
 
@@ -346,9 +246,5 @@ void Character::free()
     gStreamingDie.free();
     gStreamingAttack.free();
     gHurt.free();
-    gDataStreamGo.free();
-    gDataStreamStand.free();
-    gDataStreamRun.free();
-    gDataStreamDie.free();
-    gDataStreamAttack.free();
+
 }

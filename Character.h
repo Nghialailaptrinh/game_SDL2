@@ -2,14 +2,13 @@
 #define CHARACTER_H_INCLUDED
 
 #include "Dot.h"
-#include "DataStream.h"
 #include <SDL.h>
 #include <sstream>
 
 class Character
 {
 public:
-    Character();
+    Character(int x=50,int y=50);
     ~Character() { free(); }
 
     bool loadMedia();
@@ -52,12 +51,6 @@ private:
     LTexture gStreamingAttack;
     LTexture gHurt;
 
-    // Animation stream
-    DataStream gDataStreamGo;
-    DataStream gDataStreamStand;
-    DataStream gDataStreamRun;
-    DataStream gDataStreamDie;
-    DataStream gDataStreamAttack;
 };
 
 extern Character gCharacter;
