@@ -2,52 +2,12 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="Dot.cpp" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Tile.h" open="1" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="150" topLine="0" />
-		</Cursor>
-		<Folding>
-			<Collapse line="10" />
-			<Collapse line="41" />
-			<Collapse line="87" />
-			<Collapse line="97" />
-			<Collapse line="199" />
-			<Collapse line="232" />
-			<Collapse line="260" />
-		</Folding>
-	</File>
-	<File name="need.h" open="1" top="0" tabpos="20" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="0" />
+			<Cursor1 position="351" topLine="1" />
 		</Cursor>
 	</File>
-	<File name="Slime.cpp" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="159" topLine="0" />
-		</Cursor>
-		<Folding>
-			<Collapse line="10" />
-			<Collapse line="15" />
-			<Collapse line="54" />
-			<Collapse line="59" />
-			<Collapse line="110" />
-			<Collapse line="117" />
-		</Folding>
-	</File>
-	<File name="Slime.h" open="1" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1471" topLine="0" />
-		</Cursor>
-		<Folding>
-			<Collapse line="8" />
-		</Folding>
-	</File>
-	<File name="Character.h" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1778" topLine="24" />
-		</Cursor>
-	</File>
-	<File name="Wolve.cpp" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Wolve.cpp" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="1460" topLine="0" />
 		</Cursor>
@@ -61,12 +21,44 @@
 			<Collapse line="139" />
 		</Folding>
 	</File>
-	<File name="LTimer.h" open="1" top="0" tabpos="21" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Wolve.h" open="1" top="0" tabpos="14" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="22" />
+		</Cursor>
+	</File>
+	<File name="LTimer.h" open="1" top="0" tabpos="20" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="0" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="Character.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Tile.cpp" open="1" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1654" topLine="0" />
+		</Cursor>
+		<Folding>
+			<Collapse line="6" />
+			<Collapse line="16" />
+			<Collapse line="26" />
+			<Collapse line="35" />
+			<Collapse line="40" />
+			<Collapse line="45" />
+			<Collapse line="65" />
+		</Folding>
+	</File>
+	<File name="LTexture.h" open="1" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1718" topLine="0" />
+		</Cursor>
+		<Folding>
+			<Collapse line="13" />
+		</Folding>
+	</File>
+	<File name="constant.h" open="1" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1567" topLine="35" />
+		</Cursor>
+	</File>
+	<File name="Character.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="2563" topLine="5" />
 		</Cursor>
@@ -83,22 +75,49 @@
 			<Collapse line="238" />
 		</Folding>
 	</File>
-	<File name="LTexture.h" open="1" top="0" tabpos="18" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="DataStream.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1718" topLine="0" />
+			<Cursor1 position="1161" topLine="0" />
 		</Cursor>
 		<Folding>
-			<Collapse line="13" />
+			<Collapse line="4" />
+			<Collapse line="16" />
+			<Collapse line="46" />
+			<Collapse line="58" />
 		</Folding>
 	</File>
-	<File name="LTexture.cpp" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="-1" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="349" topLine="0" />
+			<Cursor1 position="20754" topLine="80" />
+		</Cursor>
+		<Folding>
+			<Collapse line="56" />
+			<Collapse line="128" />
+			<Collapse line="247" />
+			<Collapse line="306" />
+			<Collapse line="327" />
+			<Collapse line="369" />
+			<Collapse line="393" />
+			<Collapse line="413" />
+			<Collapse line="454" />
+			<Collapse line="477" />
+			<Collapse line="506" />
+			<Collapse line="530" />
+			<Collapse line="562" />
+			<Collapse line="574" />
+			<Collapse line="597" />
+			<Collapse line="618" />
+		</Folding>
+	</File>
+	<File name="LTexture.cpp" open="1" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4625" topLine="36" />
 		</Cursor>
 		<Folding>
 			<Collapse line="24" />
 			<Collapse line="28" />
 			<Collapse line="42" />
+			<Collapse line="65" />
 			<Collapse line="84" />
 			<Collapse line="107" />
 			<Collapse line="119" />
@@ -117,7 +136,25 @@
 			<Collapse line="198" />
 		</Folding>
 	</File>
-	<File name="need.cpp" open="1" top="0" tabpos="22" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Character.h" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1778" topLine="24" />
+		</Cursor>
+	</File>
+	<File name="DataStream.h" open="1" top="0" tabpos="16" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
+		<Folding>
+			<Collapse line="13" />
+		</Folding>
+	</File>
+	<File name="Dot.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="231" topLine="6" />
+		</Cursor>
+	</File>
+	<File name="need.cpp" open="1" top="0" tabpos="21" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="4027" topLine="0" />
 		</Cursor>
@@ -132,89 +169,64 @@
 			<Collapse line="108" />
 		</Folding>
 	</File>
-	<File name="LTimer.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="main.cpp" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-1" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="22650" topLine="183" />
-		</Cursor>
-		<Folding>
-			<Collapse line="56" />
-			<Collapse line="128" />
-			<Collapse line="247" />
-			<Collapse line="306" />
-			<Collapse line="327" />
-			<Collapse line="369" />
-			<Collapse line="393" />
-			<Collapse line="413" />
-			<Collapse line="454" />
-			<Collapse line="477" />
-			<Collapse line="506" />
-			<Collapse line="530" />
-			<Collapse line="562" />
-			<Collapse line="574" />
-			<Collapse line="597" />
-		</Folding>
-	</File>
-	<File name="DataStream.h" open="1" top="0" tabpos="17" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="0" />
-		</Cursor>
-		<Folding>
-			<Collapse line="13" />
-		</Folding>
-	</File>
-	<File name="Tile.h" open="1" top="0" tabpos="16" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="351" topLine="1" />
-		</Cursor>
-	</File>
-	<File name="constant.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="constant.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="640" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="Dot.h" open="1" top="0" tabpos="13" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Slime.h" open="1" top="0" tabpos="18" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="231" topLine="6" />
-		</Cursor>
-	</File>
-	<File name="Wolve.h" open="1" top="0" tabpos="15" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="22" />
-		</Cursor>
-	</File>
-	<File name="DataStream.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="1161" topLine="0" />
+			<Cursor1 position="1471" topLine="0" />
 		</Cursor>
 		<Folding>
-			<Collapse line="4" />
-			<Collapse line="16" />
-			<Collapse line="46" />
-			<Collapse line="58" />
+			<Collapse line="8" />
 		</Folding>
 	</File>
-	<File name="Tile.cpp" open="1" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Slime.cpp" open="1" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1654" topLine="0" />
+			<Cursor1 position="159" topLine="0" />
 		</Cursor>
 		<Folding>
-			<Collapse line="6" />
-			<Collapse line="16" />
-			<Collapse line="26" />
-			<Collapse line="35" />
-			<Collapse line="40" />
-			<Collapse line="45" />
-			<Collapse line="65" />
+			<Collapse line="10" />
+			<Collapse line="15" />
+			<Collapse line="54" />
+			<Collapse line="59" />
+			<Collapse line="110" />
+			<Collapse line="117" />
 		</Folding>
 	</File>
-	<File name="constant.h" open="1" top="0" tabpos="12" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="Dot.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1567" topLine="35" />
+			<Cursor1 position="150" topLine="0" />
 		</Cursor>
+		<Folding>
+			<Collapse line="10" />
+			<Collapse line="41" />
+			<Collapse line="87" />
+			<Collapse line="97" />
+			<Collapse line="199" />
+			<Collapse line="232" />
+			<Collapse line="260" />
+		</Folding>
+	</File>
+	<File name="need.h" open="1" top="0" tabpos="19" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="LTimer.cpp" open="1" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
+		<Folding>
+			<Collapse line="3" />
+			<Collapse line="12" />
+			<Collapse line="21" />
+			<Collapse line="30" />
+			<Collapse line="41" />
+			<Collapse line="52" />
+			<Collapse line="71" />
+			<Collapse line="76" />
+		</Folding>
 	</File>
 </CodeBlocks_layout_file>

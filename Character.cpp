@@ -80,7 +80,7 @@ void Character::handleEvent(SDL_Event& e)
 }
 
 bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies, int weapon)  // demo weapon 1 laf kiến; mỗi vũ khí có tầm đánh và sát thương khác nhau
-{     if(weapon==1)dotCharacter.SetDameSword(50);
+{     if(weapon==1){dotCharacter.SetDameSword(dotCharacter.GetDameSword());}   //  kiếm là loại có sát thương cơ bản nhất
     int attackRange ;if(weapon==1)attackRange =50;
     if (mFrame >= 2.85 && mFrame <= 3.05&& isAttacking())
         Mix_PlayChannel(-1, gSword, 0);

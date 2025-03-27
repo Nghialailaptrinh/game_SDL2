@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1743050583 source:c:\users\admin\onedrive\desktop\game\character.cpp
+1743081899 source:c:\users\admin\onedrive\desktop\game\character.cpp
 	"Character.h"
 
 1742998729 c:\users\admin\onedrive\desktop\game\character.h
@@ -68,7 +68,7 @@
 1742883392 c:\users\admin\onedrive\desktop\game\ltimer.h
 	<SDL.h>
 
-1743049662 source:c:\users\admin\onedrive\desktop\game\main.cpp
+1743081608 source:c:\users\admin\onedrive\desktop\game\main.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
