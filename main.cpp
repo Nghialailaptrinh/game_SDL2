@@ -238,6 +238,7 @@
     gRainTexture.free();
 
     gCharacter.free();
+    OpenTexture.free();
     OpenTexture1.free();
 
     texture1.free();
@@ -273,82 +274,74 @@
     SDL_Quit();
 }
 
-
+///////////////////////////////////////////////////////////////////////////////////
 wolve** Wolve;
 slime** Slime;
-
-
-
-
-
-
 int Level=1;
-int level=Level;
-float GameStarted=0;
+bool isGameLoaded = false;  // Biến flag kiểm tra xem game đã được load chưa
+//////////////////////////////////////////////////////////////////////////////////
+void RenderOpen(float& GameStarted) {
+    if(GameStarted==0){
+        OpenTexture.render(1,1);
+    }
+    else if(GameStarted==0.5){
+        OpenTexture1.render(0,0);
+        if (Level >= 1) {
+            texture1.render(0, 0);
+        }
+        if (Level >= 2) {
+            texture2.render(100, 100);
+        }
+        if (Level >= 3) {
+            texture3.render(200, 200);
+        }
+        if (Level >= 4) {
+            texture4.render(300, 300);
+        }
+    }
+}
 
+void handleOpenGame(SDL_Event &e, bool &quit, int& level, float& GameStarted) {
+    if (GameStarted == 0) {
+        if (e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)) {
+            quit = true;
+        } else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_RETURN && e.key.repeat == 0) {
+            GameStarted = 0.5;
+        }
+    } else if (GameStarted == 0.5) {
+        switch (e.type) {
+            case SDL_QUIT:
+                GameStarted = 0;
+                break; // Nếu người dùng nhấn nút thoát
 
+            case SDL_KEYDOWN: // Xử lý sự kiện khi nhấn phím
+                if (e.key.repeat == 0) {  // Kiểm tra không phải sự kiện phím lặp lại
+                    if (e.key.keysym.sym == SDLK_ESCAPE) {
+                        GameStarted = 0;
+                    } else if (e.key.keysym.sym == SDLK_1) {
+                        level = 1;
+                        GameStarted = 1;
+                    } else if (e.key.keysym.sym == SDLK_2) {
+                        level = 2;
+                        GameStarted = 1;
+                    } else if (e.key.keysym.sym == SDLK_3) {
+                        level = 3;
+                        GameStarted = 1;
+                    } else if (e.key.keysym.sym == SDLK_4) {
+                        level = 4;
+                        GameStarted = 1;
+                    } else if (e.key.keysym.sym == SDLK_SPACE) {
+                        level = Level;
+                        GameStarted = 1;
+                    }
+                }
+                break;
 
-//void RenderOpen(SDL_Event &e,bool & quit) {
-//    if(GameStarted==0){
-//        OpenTexture.render(1,1);
-//    }
-//    else if(GameStarted==0.5){
-//        OpenTexture1.render(0,0);
-//        if (level >= 1) {
-//            texture1.render(0, 0);
-//        }
-//        if (level >= 2) {
-//            texture2.render(100, 100);
-//        }
-//        if (level >= 3) {
-//            texture3.render(200, 200);
-//        }
-//        if (level >= 4) {
-//            texture4.render(300, 300);
-//        }
-//    }
-//}
-//
-//// Hàm xử lý thao tác mở game
-//void handleOpenGame(SDL_Event &e,bool &quit) {
-//    if(GameStarted==0){
-//        if(e.type==SDL_QUIT ||(e.type==SDL_KEYDOWN && e.key.keysym.sym==SDLK_ESCAPE)){quit==true;}
-//        else{GameStarted=0.5;}
-//    }
-//
-//    else if(GameStarted==0.5){
-//        switch (e.type) {
-//            case SDL_QUIT:GameStarted=0;  // Nếu người dùng nhấn nút thoát
-//
-//
-//            case SDL_KEYDOWN:  // Khi nhấn phím
-//                if (e.key.keysym.sym == SDLK_ESCAPE) {  // Nếu nhấn phím Escape
-//                    GameStarted=0;
-//                } else if (e.key.keysym.sym == SDLK_1) {  // Nếu nhấn phím 1
-//                    level = 1;  // Cập nhật level
-//                    GameStarted=1;
-//                } else if (e.key.keysym.sym == SDLK_2) {  // Nếu nhấn phím 2
-//                    level = 2;  // Cập nhật level
-//                   GameStarted=1;
-//                } else if (e.key.keysym.sym == SDLK_3) {  // Nếu nhấn phím 3
-//                    level = 3;  // Cập nhật level
-//                   GameStarted=1;
-//                } else if (e.key.keysym.sym == SDLK_4) {  // Nếu nhấn phím 4
-//                    level = 4;  // Cập nhật level
-//                   GameStarted=1;
-//                } else if (e.key.keysym.sym == SDLK_SPACE) {
-//                    level=Level;
-//                    GameStarted=1;
-//                }
-//                break;
-//
-//            default:
-//                break;
-//        }
-//    }
-//
-//}
-//
+            default:
+                break; // Không làm gì nếu là sự kiện khác
+        }
+    }
+}
 
  bool handleEvent(SDL_Event &e, Character &character,  bool &quit) {        // ta dùng bool để check xem sự kiện có phải sự kiện thóat không
     static bool waitingForQuit = false;
@@ -592,30 +585,31 @@ if(level==1){
             success = false;
         }
     }
+else{success=false;}
 return success;
 }
 
 
 
-
-int main( int argc, char* args[] )
+int main(int argc, char* args[])
 {
     srand(static_cast<unsigned int>(time(0)));
 
     // Start up SDL and create window
-    if( !init() )
+    if (!init())
     {
-        printf( "Failed to initialize!\n" );
+        printf("Failed to initialize!\n");
     }
     else
     {
         // The level tiles
-        Tile* tileSet[ TOTAL_TILES ];
+        Tile* tileSet[TOTAL_TILES];
+        static int level = Level;
 
         // Load media
-        if( !loadMedia( ) || !loadGame(level,tileSet) )
+        if (!loadMedia())
         {
-            printf( "Failed to load media!\n" );
+            printf("Failed to load media!\n");
         }
         else
         {
@@ -631,108 +625,135 @@ int main( int argc, char* args[] )
             // Level camera
             SDL_Rect camera = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
-            std::pair<int,int>* position = createPositionArray(20);
+            std::pair<int, int>* position = createPositionArray(20);
 
             // Calculate the start time
             Uint32 frameStart;
             int frameTime;
+///////////////////////////////////////////////////////////////////////////////////////
 
-            /////////
-
-
-            // While application is running
-            while( !quit )
+            while (!quit)
             {
+                frameStart = SDL_GetTicks();  // Get the start time for the frame
 
-                    frameStart = SDL_GetTicks();  // Get the start time for the frame
-
-                    static bool wait_for_quit = 0;
-
-                    // Handle events on queue
-                    static int renderP = 0; // chưa in pass lần nào;
-//                    if(GameStarted!=1){RenderOpen(level);}
-
-                    while( SDL_PollEvent( &e ) != 0 )
+                static float GameStarted = 0;
+                if (GameStarted != 1)
+                {
+                    RenderOpen(GameStarted);
+                    while (SDL_PollEvent(&e) != 0)
                     {
-                        wait_for_quit = handleEvent(e, gCharacter, quit);
-//                        if(GameStarted!=1)handleOpenGame(e,quit);
+                        handleOpenGame(e, quit, level, GameStarted); ////////// mở đầu game; trả về game started là 1 nếu ta bấm màn chơi
                     }
-
-                    // Calculate time step
-                    float timeStep = stepTimer.getTicks() / 1000.f;
-
-                    // Move the character
-                    if(wait_for_quit == 0){
-                         gCharacter.move(tileSet, timeStep);
-                        if((frameStart/100)%2)  // cứ 1/10 giây mới lưu bóng 1 lần;
-                        {dotCharacter->updatePosition(position);}
-                         AiHandle(e,tileSet,position);   // enemy xử lý sự kiện
-
-                    }
-                    gCharacter.attackEnemy(dotWolve, numWolve, 1);
-                    gCharacter.attackEnemy(dotSlime, numSlime, 1);
-
-                    for(int i=0;i<numWolve;i++){
-                        if(!Wolve[i]->isDead())
-                        Wolve[i]->attackEnemy();
-                    }
-
-                    // Restart step timer
-                    stepTimer.start();
-
-                    gCharacter.setCamera(camera);
+                }
 
 
-                    gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
-                    SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
-                    SDL_RenderClear(gRenderer);
-
-                    // Render level
-                    for(int i = 0; i < TOTAL_TILES; ++i)
+                else
+                {
+                    if (!isGameLoaded)  // Chỉ load game một lần duy nhất và load sau khi gameStarted , load theo level màn chơi
                     {
-                        tileSet[i]->render(camera);
+                        if (!loadGame(level, tileSet))
+                        {
+                            quit = true;
+                            break;  // Dừng game nếu không thể load game
+                        }
+                        isGameLoaded = true;  // Đánh dấu là game đã được load
                     }
 
-                    for(int i = 0; i < numWolve; i++){
-                        Wolve[i]->render(camera);
+                    else
+                    {
+                        static bool wait_for_quit = 0;  /////////////// nếu game đã bắt đầu
+
+                        // Handle events on queue
+                        static int renderP = 0; // chưa in pass lần nào
+                        while (SDL_PollEvent(&e) != 0)
+                        {
+                            wait_for_quit = handleEvent(e, gCharacter, quit);
+                        }
+
+                        // Calculate time step
+                        float timeStep = stepTimer.getTicks() / 1000.f;
+
+                        // Move the character
+                        if (wait_for_quit == 0)
+                        {
+                            gCharacter.move(tileSet, timeStep);
+                            if ((frameStart / 100) % 2) // cứ 1/10 giây mới lưu bóng 1 lần;
+                            {
+                                dotCharacter->updatePosition(position);
+                            }
+                            AiHandle(e, tileSet, position); // enemy xử lý sự kiện
+                        }
+                        gCharacter.attackEnemy(dotWolve, numWolve, 1);
+                        gCharacter.attackEnemy(dotSlime, numSlime, 1);
+
+                        for (int i = 0; i < numWolve; i++)
+                        {
+                            if (!Wolve[i]->isDead())
+                                Wolve[i]->attackEnemy();
+                        }
+
+                        // Restart step timer
+                        stepTimer.start();
+
+                        gCharacter.setCamera(camera);
+
+                        gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
+                        SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+                        SDL_RenderClear(gRenderer);
+
+                        // Render level
+                        for (int i = 0; i < TOTAL_TILES; ++i)
+                        {
+                            tileSet[i]->render(camera);
+                        }
+
+                        for (int i = 0; i < numWolve; i++)
+                        {
+                            Wolve[i]->render(camera);
+                        }
+                        for (int i = 0; i < numSlime; i++)
+                        {
+                            Slime[i]->render(camera);
+                        }
+
+                        gCharacter.render(camera);
+                        handleRain(frameStart);
+
+                        if (renderPass(dotWolve, numWolve) && renderPass(dotSlime, numSlime))
+                        {
+                            renderP++;
+                            gPassTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
+                        }
+                        if (renderP >= 300)
+                        {
+                            quit = true;
+                        }
+                        if (wait_for_quit)
+                        {
+                            gPauseTexture.render(0, 0);
+                        }
                     }
-                    for(int i = 0; i < numSlime; i++){
-                        Slime[i]->render(camera);
-                    }
-
-                    gCharacter.render(camera);
-                    handleRain(frameStart);
-
-
-                    if(renderPass(dotWolve, numWolve)&&renderPass(dotSlime,numSlime)){
-                        renderP++;
-                        gPassTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
-                    }
-                    if(renderP >= 300){ quit = true; }
-                    if(wait_for_quit){ gPauseTexture.render(0, 0); }
-
-
-
-
-
+                }
+/////////////////////////////////////////////////////////////////////////////////////////////
                 // Update screen
                 SDL_RenderPresent(gRenderer);
 
                 // FPS
                 frameTime = SDL_GetTicks() - frameStart;
 
-                if(frameDelay > frameTime)
+                if (frameDelay > frameTime)
                 {
                     SDL_Delay(frameDelay - frameTime); // Delay to maintain the FPS target
                 }
-                if(gCharacter.isDie())quit=true;
 
+                if (gCharacter.isDie())
+                    quit = true;
             }
 
             // Free resources and close SDL
             freeSlimes(Slime, dotSlime, numSlime);
 
-            freeWolves(Wolve,dotWolve,numWolve);
+            freeWolves(Wolve, dotWolve, numWolve);
 
             close(tileSet);
         }
@@ -740,4 +761,12 @@ int main( int argc, char* args[] )
 
     return 0;
 }
+
+
+
+
+
+
+
+
 

@@ -1,0 +1,9 @@
+1 0 200 20 100
+
+
+level EXP HP dame vel
+
+
+
+
+
