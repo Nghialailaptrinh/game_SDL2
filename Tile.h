@@ -20,7 +20,7 @@ private:
     SDL_Rect mBox;
     int mType;
 };
-bool setTiles( Tile *tiles[] );
+bool setTiles( Tile *tiles[],int level=1 );
 
 bool touchesWall(SDL_Rect box,Tile* tiles[]);
 

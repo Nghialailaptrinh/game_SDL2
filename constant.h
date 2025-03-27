@@ -59,6 +59,6 @@ extern SDL_Renderer* gRenderer ;
 //Globally used font
 extern TTF_Font* gFont ;
 
-const int MaxLevel=1; // game chỉ mới có 1 màn
+const int MaxLevel=4; // game chỉ mới có 4 màn
 
 #endif // CONSTANT_H_INCLUDED

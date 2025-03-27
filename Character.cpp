@@ -82,7 +82,7 @@ void Character::handleEvent(SDL_Event& e)
 bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies, int weapon)  // demo weapon 1 laf kiến; mỗi vũ khí có tầm đánh và sát thương khác nhau
 {     if(weapon==1)dotCharacter.SetDameSword(50);
     int attackRange ;if(weapon==1)attackRange =50;
-    if (mFrame >= 2.85 && mFrame <= 3&& isAttacking())
+    if (mFrame >= 2.85 && mFrame <= 3.05&& isAttacking())
         Mix_PlayChannel(-1, gSword, 0);
     return dotCharacter.attackEnemy(dotEnemy, numEnemies, attackRange, mFrame >= 4.85 && mFrame <= 5.05 && isAttacking());
 }
@@ -177,7 +177,7 @@ void Character::render(SDL_Rect& camera)
     else if (isHurt()){
          Frame = 6;
 
-        if (mFrame >= 5.85) { dotCharacter.SetHurt(0);dotCharacter.SetTimeHurt(0); }
+        if (mFrame >= 5.85) { dotCharacter.SetHurt(0);dotCharacter.SetTimeHurt(0); mFrame=5.9;}
         mFrame = fmod(double(mFrame + 0.1), double(Frame));
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
@@ -186,8 +186,7 @@ void Character::render(SDL_Rect& camera)
     else if (isAttacking()) {
         Frame = 8;
 
-
-        if (mFrame >= 7.75) { dotCharacter.SetAttacking(isAttack()); }
+        if (mFrame >= 7.75) { dotCharacter.SetAttacking(isAttack()); mFrame=7.8;}
         mFrame = fmod(double(mFrame + 0.2), double(Frame));
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
@@ -196,12 +195,11 @@ void Character::render(SDL_Rect& camera)
     }
     else if (dotCharacter.isRun() && dotCharacter.isWalk()) {
         Frame = 8;
-
         mFrame = fmod(double(mFrame + 0.1), double(Frame));
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
         gStreamingRun.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
-
+        if(mFrame>=7.85){mFrame=7.9;}
 
     }
     else if (dotCharacter.isWalk()) {
@@ -211,15 +209,17 @@ void Character::render(SDL_Rect& camera)
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
         gStreamingGo.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
+        if(mFrame>=5.85){mFrame=5.9;}
 
     }
     else {
         Frame = (dotCharacter.isUp() ? 4 : 12);
 
-        mFrame = fmod(double(mFrame + 0.1), double(Frame));
+        mFrame = fmod(double(mFrame + 0.05), double(Frame));
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
         gStreamingStand.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
+        if(mFrame>=Frame-0.1){mFrame=0;}
 
     }
 }

@@ -62,7 +62,7 @@ bool touchesWall( SDL_Rect box, Tile* tiles[] )
      return false;
  }
 
-bool setTiles( Tile* tiles[] )
+bool setTiles( Tile* tiles[],int level )
  {
  	//Success flag
  	bool tilesLoaded = true;
@@ -71,7 +71,9 @@ bool setTiles( Tile* tiles[] )
      int x = 0, y = 0;
 
      //Open the map
-     std::ifstream map( "map/map2.map" );
+
+     std::ifstream map;
+     if(level==1)map.open( "map/map1.map" );
 
      //If the map couldn't be loaded
      if( map.fail() )

@@ -17,17 +17,39 @@
  #include "Wolve.h"
 
 
-
-
-
  //Starts up SDL and creates window
  bool init();
 
  //Loads media
  bool loadMedia( Tile* tiles[] );
-
  //Frees media and shuts down SDL
  void close( Tile* tiles[] );
+
+ //////////// bộ load
+ void RenderOpen(float& GameStarted);                //vẽ menu
+ void handleOpenGame(SDL_Event &e, bool &quit, int& level, float& GameStarted);    // sụ kiện menu
+ bool loadGame(int level,Tile* tiles[]);                      // load theo màn chơi
+ void GetBegin(const std::string& filename);          // khởi tạo vị trí và các chỉ số nhan vật
+ slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& dotSlime);
+ wolve** createWolvesFromFile(const std::string& filename, int& numWolve, Dot**& dotWolve);
+
+
+
+ //////////// bộ xử lý game
+ bool handleEvent(SDL_Event &e, Character &character,  bool &quit);          // nhận vật di chuyển và sự kiện khác
+ void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position = nullptr);   // điều kiển enemy
+ void handleRain(Uint32 &frameStart);        // thời tiết mưa
+
+
+
+ /////////// bộ thoát
+
+ bool renderPass(Dot** dotEnemy, int numEnemies);
+ void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime);
+ void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve);
+
+
+
 
 
 
@@ -273,6 +295,8 @@
     IMG_Quit();
     SDL_Quit();
 }
+
+ //void closeMap(){}
 
 ///////////////////////////////////////////////////////////////////////////////////
 wolve** Wolve;
@@ -536,7 +560,7 @@ void handleRain(Uint32 &frameStart) {
     }
 }
 
-void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position = nullptr) {
+void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position ) {
 
     for (int i = 0; i < numWolve; i++) {
         dotWolve[i]->AiHandleEvent(e, tileSet, position); // Xử lý sự kiện cho từng Wolve
@@ -579,7 +603,7 @@ if(level==1){
     Wolve=createWolvesFromFile("save_game/Wolve1.txt",numWolve,dotWolve);
     Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
     //Load tile map
-        if( !setTiles( tiles ) )
+        if( !setTiles( tiles,1 ) )
         {
             printf( "Failed to load tile set!\n" );
             success = false;
@@ -604,7 +628,7 @@ int main(int argc, char* args[])
     {
         // The level tiles
         Tile* tileSet[TOTAL_TILES];
-        static int level = Level;
+        static int level ;
 
         // Load media
         if (!loadMedia())
@@ -726,7 +750,10 @@ int main(int argc, char* args[])
                         }
                         if (renderP >= 300)
                         {
-                            quit = true;
+                            //quit = true;
+                            Level++;  // tăng số màn
+                            GameStarted=0.5;
+
                         }
                         if (wait_for_quit)
                         {
