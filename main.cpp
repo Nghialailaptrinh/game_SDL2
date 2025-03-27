@@ -29,7 +29,7 @@
  //Loads media
  bool loadMedia( Tile* tiles[] );
  //Frees media and shuts down SDL
- void close( Tile* tiles[] );
+ void close(Tile* tiles[],bool loadMap,slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve );
 
  //////////// bộ load
  void RenderOpen(int& GameStarted);                //vẽ menu
@@ -53,7 +53,7 @@
  bool renderPass(Dot** dotEnemy, int numEnemies);
  void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime);
  void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve);
- void closeMap(Tile* tiles[],slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve); /////// ta dùng để xóa map và các nhân vật; để load màn chơi mới
+ void closeMap(Tile* tiles[],bool loadMap,slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve); /////// ta dùng để xóa map và các nhân vật; để load màn chơi mới
 
 
 
@@ -280,8 +280,8 @@ return success;
 }
 
 
- void close(Tile* tiles[],slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve) {
-    closeMap(tiles,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);
+ void close(Tile* tiles[],bool loadMap,slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve) {
+    closeMap(tiles,loadMap,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);
     // Giải phóng các tài nguyên khác (như texture, âm thanh)
     gPauseTexture.free();
     gPassTexture.free();
@@ -324,15 +324,16 @@ return success;
     SDL_Quit();
 }
 
- void closeMap(Tile* tiles[],slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve){
+ void closeMap(Tile* tiles[],bool loadMap,slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve){
    // Giải phóng bộ nhớ cho từng Tile trong mảng
-    for (int i = 0; i < TOTAL_TILES; ++i) {
-        if (tiles[i] != nullptr) {
-            delete tiles[i];  // Giải phóng bộ nhớ của Tile[i]
-            tiles[i] = nullptr;  // Đặt lại con trỏ về nullptr để tránh sử dụng lại
+   if(loadMap){             // chỉ khi đã load map mới có cái để xóa
+        for (int i = 0; i < TOTAL_TILES; ++i) {
+            if (tiles[i] != nullptr) {
+                delete tiles[i];  // Giải phóng bộ nhớ của Tile[i]
+                tiles[i] = nullptr;  // Đặt lại con trỏ về nullptr để tránh sử dụng lại
+            }
         }
-    }
-
+   }
     freeSlimes(Slime, dotSlime, numSlime);
 
     freeWolves(Wolve, dotWolve, numWolve);
@@ -776,7 +777,7 @@ int main(int argc, char* args[])
                             //quit = true;
                             Level++;  // tăng số màn chơi
                             GameStarted=1;
-                            if((GameStarted==1) && isGameLoaded){closeMap(tileSet,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);isGameLoaded=false;} // nếu quay trở lại menu; xóa màn chơi cũ đi
+                            if((GameStarted==1) && isGameLoaded){closeMap(tileSet,isGameLoaded,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);isGameLoaded=false;} // nếu quay trở lại menu; xóa màn chơi cũ đi
                             wait_for_quit=false;
                             renderP=0;
 
@@ -803,13 +804,12 @@ int main(int argc, char* args[])
 
             // Free resources and close SDL
 
-            close(tileSet,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);
+            close(tileSet,isGameLoaded,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);
         }
     }
 
     return 0;
 }
-
 
 
 

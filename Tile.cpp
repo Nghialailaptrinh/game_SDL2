@@ -74,6 +74,8 @@ bool setTiles( Tile* tiles[],int level )
 
      std::ifstream map;
      if(level==1)map.open( "map/map1.map" );
+     if(level==2)map.open( "map/map2.map" );
+
 
      //If the map couldn't be loaded
      if( map.fail() )

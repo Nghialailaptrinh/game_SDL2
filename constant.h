@@ -20,7 +20,7 @@ const int LEVEL_HEIGHT = 1600;
 const int TILE_WIDTH = 32;
 const int TILE_HEIGHT = 32;
 const int TOTAL_TILES = 2500;
-const int TOTAL_TILE_SPRITES = 142;
+const int TOTAL_TILE_SPRITES = 206;
 
  //The different tile sprites
  const int TILE_RED = 0;
