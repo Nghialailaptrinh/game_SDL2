@@ -90,7 +90,7 @@
  		}
 
  		//Create window
- 		gWindow = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+ 		gWindow = SDL_CreateWindow( "The Grass", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
  		if( gWindow == NULL )
  		{
  			printf( "Window could not be created! SDL Error: %s\n", SDL_GetError() );
@@ -283,10 +283,10 @@ if(level==1){
         }
     }
 else{                                            //// màn chơi mặc định
-    GetBegin("save_game/Begin1.txt");
-    Wolve=createWolvesFromFile("save_game/Wolve1.txt",numWolve,dotWolve);
-    Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
-    Goblin=createGoblinsFromFile("save_game/Goblin1.txt",numGoblin,dotGoblin);
+    GetBegin("save_game/Begin2.txt");
+    Wolve=createWolvesFromFile("save_game/Wolve2.txt",numWolve,dotWolve);
+    Slime=createSlimesFromFile("save_game/Slime2.txt",numSlime,dotSlime);
+    Goblin=createGoblinsFromFile("save_game/Goblin2.txt",numGoblin,dotGoblin);
 
     //Load tile map
         if( !setTiles( tiles,2 ) )
@@ -815,7 +815,7 @@ int main(int argc, char* args[])
                         gCharacter.attackEnemy(dotWolve, numWolve, 1);
                         gCharacter.attackEnemy(dotSlime, numSlime, 1);
                         gCharacter.attackEnemy(dotGoblin, numGoblin,1);
-/////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         for (int i = 0; i < numWolve; i++)
                         {
                             if (!Wolve[i]->isDead())
@@ -827,7 +827,7 @@ int main(int argc, char* args[])
                                 Goblin[i]->attackEnemy();
                         }
 
-//////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     // Restart step timer
                         stepTimer.start();
 
@@ -858,7 +858,7 @@ int main(int argc, char* args[])
 
                         gCharacter.render(camera);
                         handleRain(frameStart);
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         bool isRenderP = (renderPass(dotWolve, numWolve) && renderPass(dotSlime, numSlime) && renderPass(dotGoblin,numGoblin));
                         if (isRenderP)
                         {
