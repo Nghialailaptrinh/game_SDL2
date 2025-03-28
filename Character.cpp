@@ -165,7 +165,7 @@ void Character::render(SDL_Rect& camera)
         Frame = 16;
 
 
-        if (mFrame >= 15.85) { dotCharacter.SetDie(0); }   // sau này time hurt có thể dùng để làm sự thiêu đốt thể lực do độc
+        if (mFrame >= 15.85) { dotCharacter.SetDie(1); }
         mFrame = fmod(double(mFrame + 0.1), double(Frame));
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
@@ -175,6 +175,7 @@ void Character::render(SDL_Rect& camera)
 
     }
     else if (isHurt()){
+         dotCharacter.SetAttacking(0);        // thứ này vô cùng đáng sợ; sự tấn công của đối thr có thể hủy tấn công của bạn
          Frame = 6;
 
         if (mFrame >= 5.85) { dotCharacter.SetHurt(0);dotCharacter.SetTimeHurt(0); mFrame=5.9;}
@@ -214,12 +215,12 @@ void Character::render(SDL_Rect& camera)
     }
     else {
         Frame = (dotCharacter.isUp() ? 4 : 12);
-
-        mFrame = fmod(double(mFrame + 0.05), double(Frame));
+        if(Frame==4)mFrame = fmod(double(mFrame + 0.025), double(Frame));
+        else mFrame = fmod(double(mFrame + 0.05), double(Frame));
         SDL_Rect clip = { (int)mFrame * 80, i * 80, 80, 80 };
 
         gStreamingStand.render(X, Y + 5, &clip, 0, NULL, SDL_FLIP_NONE);
-        if(mFrame>=Frame-0.1){mFrame=0;}
+        if(mFrame>=Frame-0.06){mFrame=0;}
 
     }
 }

@@ -37,6 +37,8 @@
 		<Unit filename="DataStream.h" />
 		<Unit filename="Dot.cpp" />
 		<Unit filename="Dot.h" />
+		<Unit filename="Goblin.cpp" />
+		<Unit filename="Goblin.h" />
 		<Unit filename="LTexture.cpp" />
 		<Unit filename="LTexture.h" />
 		<Unit filename="LTimer.cpp" />

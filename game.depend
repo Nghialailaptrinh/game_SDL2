@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1743081899 source:c:\users\admin\onedrive\desktop\game\character.cpp
+1743130066 source:c:\users\admin\onedrive\desktop\game\character.cpp
 	"Character.h"
 
 1742998729 c:\users\admin\onedrive\desktop\game\character.h
@@ -7,17 +7,17 @@
 	<SDL.h>
 	<sstream>
 
-1743092450 c:\users\admin\onedrive\desktop\game\dot.h
+1743134875 c:\users\admin\onedrive\desktop\game\dot.h
 	<SDL.h>
 	<utility>
 	<cstdlib>
 	"Tile.h"
 
-1743048920 c:\users\admin\onedrive\desktop\game\tile.h
+1743144084 c:\users\admin\onedrive\desktop\game\tile.h
 	<SDL.h>
 	"LTexture.h"
 
-1742981741 c:\users\admin\onedrive\desktop\game\ltexture.h
+1743124173 c:\users\admin\onedrive\desktop\game\ltexture.h
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -52,12 +52,12 @@
 	"DataStream.h"
 	<cstdio>
 
-1742975758 source:c:\users\admin\onedrive\desktop\game\dot.cpp
+1743142704 source:c:\users\admin\onedrive\desktop\game\dot.cpp
 	"Dot.h"
 	"Character.h"
 	<utility>
 
-1742981741 source:c:\users\admin\onedrive\desktop\game\ltexture.cpp
+1743124173 source:c:\users\admin\onedrive\desktop\game\ltexture.cpp
 	"LTexture.h"
 	<cstdio>
 	<cstring>
@@ -68,7 +68,7 @@
 1742883392 c:\users\admin\onedrive\desktop\game\ltimer.h
 	<SDL.h>
 
-1743094731 source:c:\users\admin\onedrive\desktop\game\main.cpp
+1743136551 source:c:\users\admin\onedrive\desktop\game\main.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -82,6 +82,7 @@
 	"LTimer.h"
 	"Slime.h"
 	"Wolve.h"
+	"Goblin.h"
 
 1742954306 c:\users\admin\onedrive\desktop\game\slime.h
 	<SDL.h>
@@ -100,11 +101,19 @@
 1742950459 source:c:\users\admin\onedrive\desktop\game\slime.cpp
 	"Slime.h"
 
-1743090579 source:c:\users\admin\onedrive\desktop\game\tile.cpp
+1743144331 source:c:\users\admin\onedrive\desktop\game\tile.cpp
 	"Tile.h"
 	<SDL.h>
 	<fstream>
 
-1742950904 source:c:\users\admin\onedrive\desktop\game\wolve.cpp
+1743141660 source:c:\users\admin\onedrive\desktop\game\wolve.cpp
 	"Wolve.h"
+
+1743141736 source:c:\users\admin\onedrive\desktop\game\goblin.cpp
+	"Goblin.h"
+
+1743134808 c:\users\admin\onedrive\desktop\game\goblin.h
+	<SDL.h>
+	<sstream>
+	"Character.h"
 

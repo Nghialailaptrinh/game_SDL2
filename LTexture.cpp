@@ -6,7 +6,8 @@
 
  //Scene textures
  LTexture gDotTexture; //thuận tiện test thay vì dùng hoạt ảnh
- LTexture gPauseTexture; // kết thúc;
+ LTexture gPauseTexture;
+ LTexture gOverTexture;
  LTexture gPassTexture;
  LTexture gRainTexture; // thời tiết;
  LTexture gTileTexture[TOTAL_TILE_SPRITES];

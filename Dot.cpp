@@ -5,6 +5,7 @@
 
 Dot** dotSlime=nullptr;
 Dot** dotWolve=nullptr;
+Dot** dotGoblin=nullptr;
 
 
  Dot::Dot(int x,int y,int typeE)
@@ -99,8 +100,8 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* positi
     bool hasMoved = false;
     bool isAngry = false;
 
-    if (timeHurt == 4 && typeEnemy == 2) {
-        setVel(200);
+    if (timeHurt == 4 && typeEnemy == 2) {           // sói trở về vận tốc cơ bản
+        setVel(100);
     }
 
     if (hurt != 0) {
@@ -114,7 +115,7 @@ void Dot::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* positi
 
     if (hurt && (typeEnemy > 1) && getDistance((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY()) < 25) {
         attack = 1;
-        lastDirection=checkDiRect((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY()); // hướng cắn
+        lastDirection=checkDiRect((float)mBox.x, (float)mBox.y, (float)gCharacter.GetX(), (float)gCharacter.GetY()); // hướng tấn công
         mVelX=0;
         mVelY=0;
 
@@ -200,7 +201,7 @@ void Dot::move( Tile *tiles[], float timeStep )
  {
      //Move the dot left or right
      float i=(isRun()?1.5:1);
-     float j=(isAttacking()?0.5:1); // nếu đang tấn công; tốc độ giảm đi
+     float j=(isAttacking()?0.5:1); // nếu đang tấn công; tốc độ giảm đi; với các động vật có tốc độ thấp thì rõ ràng int (<1 )=0
      int X= mVelX * timeStep *i*j;
      mBox.x += X;
 
@@ -230,7 +231,7 @@ void Dot::move( Tile *tiles[], float timeStep )
     if(mHP<=0)dead=1;
  }
 
-bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inThisFrame) {
+bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inThisFrame) {      // hàm này sẽ trừ máu kẻ địch; định sự đau và cuồng nộ
     bool damage=0;
         if (isAttacking() && inThisFrame) {
             for (int i = 0; i < numEnemies; ++i) {
@@ -246,8 +247,9 @@ bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
                     dotEnemy[i]->SetHP((newHP>0)?newHP:0);
                     dotEnemy[i]->SetHurt(1);
                     dotEnemy[i]->SetTimeHurt(5000);
-                    if(dotEnemy[i]->typeEnemy==2)dotEnemy[i]->setVel(200);     // sói chuyển sang trái thái thần tốc;
-                    else if(dotEnemy[i]->typeEnemy==3)dotEnemy[i]->SetDameSword(100);       // goblin chuyển sang trạng thái cuồng bạo
+                    if(typeEnemy==0){mHP+=(dameSword*0.25);if(mHP>maxHP)mHP=maxHP;}       // chỉ số hút máu cơ bản
+                    else if(dotEnemy[i]->typeEnemy==2)dotEnemy[i]->setVel(200);     // sói chuyển sang trái thái thần tốc;
+                    else if(dotEnemy[i]->typeEnemy==3)dotEnemy[i]->SetDameSword(50);       // goblin chuyển sang trạng thái cuồng bạo;
                     else{}
                     }
                 }

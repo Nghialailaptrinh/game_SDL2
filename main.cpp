@@ -15,13 +15,16 @@
  #include "LTimer.h"
  #include "Slime.h"
  #include "Wolve.h"
+ #include "Goblin.h"
 
  ///////////////////////////////////////////////////////////////////////////////////////////
     wolve** Wolve;
     slime** Slime;
+    goblin** Goblin;
 
     int Level=1;
     bool isGameLoaded = false;  // Biến flag kiểm tra xem game đã được load chưa
+    bool inMenu=false;       // trạng thái trở về menu
 /////////////////////////////////////////////////////////////////////////////////////////////
  //Starts up SDL and creates window
  bool init();
@@ -29,7 +32,10 @@
  //Loads media
  bool loadMedia( Tile* tiles[] );
  //Frees media and shuts down SDL
- void close(Tile* tiles[],bool loadMap,slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve );
+ void close(Tile* tiles[],bool loadMap,
+            slime**& Slime, Dot**& dotSlime, int& numSlime,
+            wolve**& Wolve, Dot**& dotWolve, int& numWolve,
+            goblin**& Goblin, Dot**&dotGoblin,int& numGoblin );
 
  //////////// bộ load
  void RenderOpen(int& GameStarted);                //vẽ menu
@@ -38,11 +44,11 @@
  void GetBegin(const std::string& filename);          // khởi tạo vị trí và các chỉ số nhan vật
  slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& dotSlime);
  wolve** createWolvesFromFile(const std::string& filename, int& numWolve, Dot**& dotWolve);
-
+ goblin** createGoblinsFromFile(const std::string& filename, int& numGoblin, Dot**& dotGoblin);
 
 
  //////////// bộ xử lý game
- bool handleEvent(SDL_Event &e, Character &character,  bool &quit);          // nhận vật di chuyển và sự kiện khác
+ int handleEvent(SDL_Event &e, Character &character,  bool &quit);          // nhận vật di chuyển và sự kiện khác
  void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position = nullptr);   // điều kiển enemy
  void handleRain(Uint32 &frameStart);        // thời tiết mưa
 
@@ -53,7 +59,12 @@
  bool renderPass(Dot** dotEnemy, int numEnemies);
  void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime);
  void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve);
- void closeMap(Tile* tiles[],slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve); /////// ta dùng để xóa map và các nhân vật; để load màn chơi mới
+ void freeGoblins(goblin**& Goblin, Dot**&dotGoblin,int& numGoblin);
+ void closeMap(Tile* tiles[],
+               slime**& Slime, Dot**& dotSlime, int& numSlime,
+               wolve**& Wolve, Dot**& dotWolve, int& numWolve,
+               goblin**& Goblin, Dot**&dotGoblin,int& numGoblin
+               ); /////// ta dùng để xóa map và các nhân vật; để load màn chơi mới
 
 
 
@@ -182,6 +193,11 @@
  		printf( "Failed to load tile Pause texture!\n" );
  		success = false;
  	}
+ 	if( !gOverTexture.loadFromFile( "image/Game_Over.png" ) )
+ 	{
+ 		printf( "Failed to load tile Over texture!\n" );
+ 		success = false;
+ 	}
  	if( !gPassTexture.loadFromFile( "image/Game_Pass.png" ) )
  	{
  		printf( "Failed to load tile Pass texture!\n" );
@@ -234,7 +250,7 @@
 		printf( "Failed to load run music! SDL_mixer Error: %s\n", Mix_GetError() );
 		success = false;
 	}
-	gRain = Mix_LoadWAV( "audio/rain.mp3" );
+	gRain = Mix_LoadWAV( "audio/rain.wav" );
     if( gRain == NULL )
 	{
 		printf( "Failed to load rain music! SDL_mixer Error: %s\n", Mix_GetError() );
@@ -258,6 +274,7 @@ if(level==1){
     GetBegin("save_game/Begin1.txt");
     Wolve=createWolvesFromFile("save_game/Wolve1.txt",numWolve,dotWolve);
     Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
+    Goblin=createGoblinsFromFile("save_game/Goblin1.txt",numGoblin,dotGoblin);
     //Load tile map
         if( !setTiles( tiles,1 ) )
         {
@@ -266,9 +283,11 @@ if(level==1){
         }
     }
 else{                                            //// màn chơi mặc định
-        GetBegin("save_game/Begin1.txt");
+    GetBegin("save_game/Begin1.txt");
     Wolve=createWolvesFromFile("save_game/Wolve1.txt",numWolve,dotWolve);
     Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
+    Goblin=createGoblinsFromFile("save_game/Goblin1.txt",numGoblin,dotGoblin);
+
     //Load tile map
         if( !setTiles( tiles,2 ) )
         {
@@ -280,11 +299,15 @@ return success;
 }
 
 
- void close(Tile* tiles[],bool loadMap,slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve) {
-    if(loadMap)closeMap(tiles,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);
+ void close(Tile* tiles[],bool loadMap,
+            slime**& Slime, Dot**& dotSlime, int& numSlime,
+            wolve**& Wolve, Dot**& dotWolve, int& numWolve,
+            goblin**& Goblin, Dot**&dotGoblin,int& numGoblin ) {
+    if(loadMap)closeMap(tiles,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve,Goblin,dotGoblin,numGoblin);
     // Giải phóng các tài nguyên khác (như texture, âm thanh)
     gPauseTexture.free();
     gPassTexture.free();
+    gOverTexture.free();
     gRainTexture.free();
 
     gCharacter.free();
@@ -324,7 +347,11 @@ return success;
     SDL_Quit();
 }
 
- void closeMap(Tile* tiles[],slime**& Slime, Dot**& dotSlime, int& numSlime,wolve**& Wolve, Dot**& dotWolve, int& numWolve){
+ void closeMap(Tile* tiles[],
+               slime**& Slime, Dot**& dotSlime, int& numSlime,
+               wolve**& Wolve, Dot**& dotWolve, int& numWolve,
+               goblin**& Goblin, Dot**&dotGoblin,int& numGoblin
+               ){
    // Giải phóng bộ nhớ cho từng Tile trong mảng
 
         for (int i = 0; i < TOTAL_TILES; ++i) {
@@ -333,9 +360,10 @@ return success;
                 tiles[i] = nullptr;  // Đặt lại con trỏ về nullptr để tránh sử dụng lại
             }
         }
-    freeSlimes(Slime, dotSlime, numSlime);
 
+    freeSlimes(Slime, dotSlime, numSlime);
     freeWolves(Wolve, dotWolve, numWolve);
+    freeGoblins(Goblin, dotGoblin, numGoblin);
 
  }
 
@@ -350,16 +378,16 @@ void RenderOpen(int& GameStarted) {                            // lưu ý rằng
     else if(GameStarted==1){
         OpenTexture1.render(0,0);
         if (Level >= 1) {
-            texture1.render(0, 0);
+            texture1.render(80, 100);
         }
         if (Level >= 2) {
-            texture2.render(100, 100);
+            texture2.render(180, 100);
         }
         if (Level >= 3) {
-            texture3.render(200, 200);
+            texture3.render(280, 100);
         }
         if (Level >= 4) {
-            texture4.render(300, 300);
+            texture4.render(380, 100);
         }
     }
 }
@@ -406,7 +434,7 @@ void handleOpenGame(SDL_Event &e, bool &quit, int& level, int& GameStarted) {
     }
 }
 
- bool handleEvent(SDL_Event &e, Character &character,  bool &quit) {        // ta dùng bool để check xem sự kiện có phải sự kiện thóat không
+ int handleEvent(SDL_Event &e, Character &character,  bool &quit) {        // ta dùng int để check xem sự kiện có phải sự kiện thóat, hoặc về menu không
     static bool waitingForQuit = false;
     // Xử lý sự kiện của Character
     character.handleEvent(e);
@@ -425,6 +453,10 @@ void handleOpenGame(SDL_Event &e, bool &quit, int& level, int& GameStarted) {
                 printf("Returning to game...\n");
                 waitingForQuit = false;
             }
+            else if(e.key.keysym.sym==SDLK_ESCAPE){
+                waitingForQuit=false;
+            return 2;
+           }
         }
     }
     return waitingForQuit;
@@ -441,15 +473,11 @@ void handleOpenGame(SDL_Event &e, bool &quit, int& level, int& GameStarted) {
         }
     }
 
-    if (render) {
-        gPassTexture.render(0, 0);
-
-    }
 
     return render;
 }
 
-// Trong hàm createSlimesFromFile
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& dotSlime) {
     std::ifstream file(filename);
     if (!file) {
@@ -490,7 +518,6 @@ slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& 
 }
 
 
-// Trong hàm freeSlimes
 void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime) {
     // Giải phóng bộ nhớ cho từng slime và dotSlime
     for (int i = 0; i < numSlime; ++i) {
@@ -566,27 +593,71 @@ void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve) {
     numWolve = 0;
 }
 
+goblin** createGoblinsFromFile(const std::string& filename, int& numGoblin, Dot**& dotGoblin){
+    std::ifstream file(filename);
+    if (!file) {
+        printf("Không thể mở file!\n");
+        return nullptr;
+    }
+    file >> numGoblin;
+    goblin** Goblin = new goblin*[numGoblin];
+    dotGoblin = new Dot*[numGoblin];  // Cấp phát mảng Dot* tương ứng
+    int x, y;
+    for (int i = 0; i < numGoblin; ++i) {
+        file >> x >> y;
+        Goblin[i] = new goblin(x, y);
+        if (i == 0) Goblin[i]->loadMedia();
+        dotGoblin[i] = Goblin[i]->GetDot();
+    }
+
+    // Đóng file
+    file.close();
+
+    return Goblin;
+
+}
+
+void freeGoblins(goblin**& Goblin, Dot**& dotGoblin, int& numGoblin) {
+    // Giải phóng bộ nhớ cho từng wolve và dotWolve
+    for (int i = 0; i < numGoblin; ++i) {
+        if (Goblin[i] != nullptr) {
+            Goblin[i]->free();
+            delete Goblin[i];
+            Goblin[i] = nullptr;
+        }
+    }
+
+    goblin::freeStaticTextures();
+    delete[] Goblin;
+    delete[] dotGoblin;
+
+    // Đặt lại số lượng wolve
+    numGoblin = 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 // Hàm xử lý mưa
 void handleRain(Uint32 &frameStart) {
     static bool isRaining = false;  // Biến theo dõi trạng thái mưa
     static float frameRain = 0;
 
-    // Kiểm tra nếu đang trong thời gian mưa (20 đến 40 giây)
-    if ((frameStart / 20000) % 2) {
+    // Kiểm tra nếu đang trong thời gian mưa
+    if ((frameStart / 40000) % 2) {
         if (!isRaining) {  // Nếu nhạc mưa chưa được phát
-            if (((frameStart / 100) % 100) > 20) {
+            if (((frameStart / 200) % 100) > 20) {
                 Mix_PlayChannel(1, gRain, -1);  // Phát nhạc mưa (lặp vô hạn)
                 isRaining = true;  // Đánh dấu là đang mưa
             }
         }
 
         // Tạo hiệu ứng mưa to dần, nhỏ dần
-        if ((frameStart / 10000) % 2 == 0) {
-            gRainTexture.setAlpha((frameStart / 100) % 100);  // 20 đến 30 mưa to dần
+        if ((frameStart / 20000) % 2 == 0) {
+            gRainTexture.setAlpha((frameStart / 200) % 100);  //  mưa to dần
         } else {
-            gRainTexture.setAlpha(100 - (frameStart / 100) % 100);  // Mưa nhỏ dần
+            gRainTexture.setAlpha(100 - (frameStart / 200) % 100);  // Mưa nhỏ dần
             // Dừng nhạc mưa khi mưa nhỏ dần (dưới 40)
-            if ((100 - (frameStart / 100) % 100) < 40) {
+            if ((100 - (frameStart / 200) % 100) < 40) {
                 Mix_HaltChannel(1);  // Dừng nhạc mưa
                 isRaining = false;  // Đánh dấu là mưa đã kết thúc
             }
@@ -608,6 +679,10 @@ void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position ) {
     // Xử lý sự kiện cho tất cả các Slime
     for (int i = 0; i < numSlime; i++) {
         dotSlime[i]->AiHandleEvent(e, tileSet, position); // Xử lý sự kiện cho từng Slime
+    }
+
+    for (int i = 0; i < numGoblin; i++) {
+        dotGoblin[i]->AiHandleEvent(e, tileSet, position);
     }
 }
 
@@ -631,6 +706,9 @@ void GetBegin(const std::string& filename) {
     dotCharacter->SetMaxHP(HP);
     dotCharacter->SetHP(HP);
     dotCharacter->SetDameSword(dame);
+    dotCharacter->SetDead(0);               // loại bỏ các trạng thái xấu
+    dotCharacter->SetDie(0);
+    dotCharacter->SetTimeHurt(0);
 
 }
 
@@ -685,10 +763,12 @@ int main(int argc, char* args[])
                 static int GameStarted = 0;
                 if (GameStarted != 2)
                 {
+                    inMenu=false;         // không có lệnh về menu nữa
                     RenderOpen(GameStarted);
                     while (SDL_PollEvent(&e) != 0)
                     {
                         handleOpenGame(e, quit, level, GameStarted); ////////// mở đầu game; trả về gamestarted là 1 nếu ta bấm màn chơi
+                        handleEvent(e, gCharacter, quit);
                     }
                 }
 
@@ -713,7 +793,10 @@ int main(int argc, char* args[])
                         static int renderP = 0; // chưa in pass lần nào
                         while (SDL_PollEvent(&e) != 0)
                         {
-                            wait_for_quit = handleEvent(e, gCharacter, quit);
+                            int handleE = handleEvent(e, gCharacter, quit);        // trả về 0: không làm gì; 1 là mở cửa sổ pause; 2 là về menu
+                            if(handleE == 1)wait_for_quit = 1;
+                            else if(handleE == 2){ inMenu=true; wait_for_quit=0;  }
+                            else{wait_for_quit=0;}
                         }
 
                         // Calculate time step
@@ -731,14 +814,21 @@ int main(int argc, char* args[])
                         }
                         gCharacter.attackEnemy(dotWolve, numWolve, 1);
                         gCharacter.attackEnemy(dotSlime, numSlime, 1);
-
+                        gCharacter.attackEnemy(dotGoblin, numGoblin,1);
+/////////////////////////////////////////////////////////////////////////////
                         for (int i = 0; i < numWolve; i++)
                         {
                             if (!Wolve[i]->isDead())
                                 Wolve[i]->attackEnemy();
                         }
+                        for (int i = 0; i < numGoblin; i++)
+                        {
+                            if (!Goblin[i]->isDead())
+                                Goblin[i]->attackEnemy();
+                        }
 
-                        // Restart step timer
+//////////////////////////////////////////////////////////////
+                    // Restart step timer
                         stepTimer.start();
 
                         gCharacter.setCamera(camera);
@@ -746,7 +836,7 @@ int main(int argc, char* args[])
                         gCharacter.setBlendMode(SDL_BLENDMODE_BLEND);
                         SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
                         SDL_RenderClear(gRenderer);
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         // Render level
                         for (int i = 0; i < TOTAL_TILES; ++i)
                         {
@@ -761,22 +851,36 @@ int main(int argc, char* args[])
                         {
                             Slime[i]->render(camera);
                         }
+                        for (int i = 0; i < numGoblin; i++)
+                        {
+                            Goblin[i]->render(camera);
+                        }
 
                         gCharacter.render(camera);
                         handleRain(frameStart);
-
-                        if (renderPass(dotWolve, numWolve) && renderPass(dotSlime, numSlime))
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                        bool isRenderP = (renderPass(dotWolve, numWolve) && renderPass(dotSlime, numSlime) && renderPass(dotGoblin,numGoblin));
+                        if (isRenderP)
                         {
                             renderP++;
+                            gPassTexture.render(0,0);
                             gPassTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
                         }
-                        if (gCharacter.isDie())quit = true;
-                        if (renderP >= 300)
+
+
+                        if(gCharacter.isDead()){
+                            renderP++;
+                            gOverTexture.render(0,0);
+                            gOverTexture.setAlpha((renderP < 127) ? renderP * 2 : 255);
+
+                        }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                        if (renderP >= 300  || inMenu  )             // nếu vượt qua màn hoặc có lệnh về menu
                         {
                             //quit = true;
-                            Level++;  // tăng số màn chơi
+                            if(!inMenu && !gCharacter.isDie())Level++;  // tăng số màn chơi
                             GameStarted=1;
-                            if((GameStarted==1) && isGameLoaded){closeMap(tileSet,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);isGameLoaded=false;} // nếu quay trở lại menu; xóa màn chơi cũ đi
+                            if((GameStarted==1) && isGameLoaded){closeMap(tileSet,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve,Goblin,dotGoblin,numGoblin);isGameLoaded=false;} // nếu quay trở lại menu; xóa màn chơi cũ đi
                             wait_for_quit=false;
                             renderP=0;
                             gPassTexture.setAlpha(0);
@@ -806,7 +910,10 @@ int main(int argc, char* args[])
 
             // Free resources and close SDL
 
-            close(tileSet,isGameLoaded,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve);
+            close(tileSet,isGameLoaded,
+                  Slime,dotSlime,numSlime,
+                  Wolve,dotWolve,numWolve,
+                  Goblin,dotGoblin,numGoblin);
         }
     }
 

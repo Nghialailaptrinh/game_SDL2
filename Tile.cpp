@@ -3,17 +3,20 @@
 #include <fstream>
 
 
-int CantMove[18]={64,67,68,69,74,75,76,77,78,79,86,88,91,93,94,97,98,101}; // các loại gạch ko đi qua được
+int CantMove[110]={64,67,68,69,74,75,76,77,78,79,86,88,91,93,94,97,98,101,
+101, 102, 104, 105, 106,107,108, 109, 110, 111, 113, 114, 116, 117, 119, 120, 121, 123, 124, 126, 127, 128, 129, 130, 131, 132, 135, 138, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 198, 199, 200, 201, 202, 203
+,204
+}; // các loại gạch ko đi qua được
 bool canMove(int tileType){
     bool Cmove=true;
-for(int i=0;i<18;i++){
-    if(tileType==CantMove[i] ||tileType>=101){Cmove=false;break;}
+for(int i=0;i<110;i++){
+    if(tileType==CantMove[i] ){Cmove=false;break;}
 }
    return Cmove;
 }
 
 
-Tile::Tile(int x, int y, int tileType)
+Tile::Tile(int x, int y, int tileType, bool canmove)
 {
     mBox.x = x;
     mBox.y = y;
@@ -21,6 +24,7 @@ Tile::Tile(int x, int y, int tileType)
     mBox.h = TILE_HEIGHT;
 
     mType = tileType;
+    can_move = canmove;
 }
 
 void Tile::render(SDL_Rect& camera)
@@ -48,7 +52,7 @@ bool touchesWall( SDL_Rect box, Tile* tiles[] )
      for( int i = 0; i < TOTAL_TILES; ++i )
      {
          //If the tile is a wall type tile
-         if( !canMove(tiles[i]->getType()))   // nếu là loại gạch không thể đi qua
+         if( !(tiles[i]->Can_move()))   // nếu là loại gạch không thể đi qua
          {
              //If the collision box touches the wall tile
              if( checkCollision( box, tiles[ i ]->getBox() ) )
@@ -106,7 +110,7 @@ bool setTiles( Tile* tiles[],int level )
  			//If the number is a valid tile number
  			if( ( tileType >= 0 ) && ( tileType < TOTAL_TILE_SPRITES ) )
  			{
- 				tiles[ i ] = new Tile( x, y, tileType );
+ 				tiles[ i ] = new Tile( x, y, tileType ,canMove(tileType));
  			}
  			//If we don't recognize the tile type
  			else

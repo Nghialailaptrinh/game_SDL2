@@ -57,6 +57,7 @@ private:
 
  extern LTexture gDotTexture; //thuận tiện test thay vì dùng hoạt ảnh
  extern LTexture gPauseTexture; // kết thúc;
+ extern LTexture gOverTexture;
  extern LTexture gPassTexture;
  extern LTexture gRainTexture; // thời tiết;
 

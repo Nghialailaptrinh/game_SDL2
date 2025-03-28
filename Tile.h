@@ -9,16 +9,18 @@
 class Tile
 {
 public:
-    Tile(int x, int y, int tileType);
+    Tile(int x, int y, int tileType, bool canmove);
     ~Tile(){}
 
     void render(SDL_Rect& camera);
     int getType();
     SDL_Rect getBox();
+    bool Can_move(){return can_move;}
 
 private:
     SDL_Rect mBox;
     int mType;
+    bool can_move;
 };
 bool setTiles( Tile *tiles[],int level=1 );
 
