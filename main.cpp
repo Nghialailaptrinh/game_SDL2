@@ -16,11 +16,13 @@
  #include "Slime.h"
  #include "Wolve.h"
  #include "Goblin.h"
+ #include "Bee.h"
 
  ///////////////////////////////////////////////////////////////////////////////////////////
     wolve** Wolve;
     slime** Slime;
     goblin** Goblin;
+    bee** Bee;
 
     int Level=1;
     bool isGameLoaded = false;  // Biến flag kiểm tra xem game đã được load chưa
@@ -35,7 +37,8 @@
  void close(Tile* tiles[],bool loadMap,
             slime**& Slime, Dot**& dotSlime, int& numSlime,
             wolve**& Wolve, Dot**& dotWolve, int& numWolve,
-            goblin**& Goblin, Dot**&dotGoblin,int& numGoblin );
+            goblin**& Goblin, Dot**&dotGoblin,int& numGoblin,
+            bee**& Bee, Dot**& dotBee, int& numBee );
 
  //////////// bộ load
  void RenderOpen(int& GameStarted);                //vẽ menu
@@ -45,7 +48,7 @@
  slime** createSlimesFromFile(const std::string& filename, int& numSlime, Dot**& dotSlime);
  wolve** createWolvesFromFile(const std::string& filename, int& numWolve, Dot**& dotWolve);
  goblin** createGoblinsFromFile(const std::string& filename, int& numGoblin, Dot**& dotGoblin);
-
+ bee** createBeesFromFile (const std:: string& filename, int& numBee, Dot**& dotBee);
 
  //////////// bộ xử lý game
  int handleEvent(SDL_Event &e, Character &character,  bool &quit);          // nhận vật di chuyển và sự kiện khác
@@ -57,13 +60,17 @@
  /////////// bộ thoát
 
  bool renderPass(Dot** dotEnemy, int numEnemies);
+
  void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime);
  void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve);
  void freeGoblins(goblin**& Goblin, Dot**&dotGoblin,int& numGoblin);
+ void freeBees(bee**& Bee, Dot**& dotBee, int& numBee);
+
  void closeMap(Tile* tiles[],
                slime**& Slime, Dot**& dotSlime, int& numSlime,
                wolve**& Wolve, Dot**& dotWolve, int& numWolve,
-               goblin**& Goblin, Dot**&dotGoblin,int& numGoblin
+               goblin**& Goblin, Dot**&dotGoblin,int& numGoblin,
+               bee**& Bee, Dot**& dotBee, int& numBee
                ); /////// ta dùng để xóa map và các nhân vật; để load màn chơi mới
 
 
@@ -275,6 +282,7 @@ if(level==1){
     Wolve=createWolvesFromFile("save_game/Wolve1.txt",numWolve,dotWolve);
     Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
     Goblin=createGoblinsFromFile("save_game/Goblin1.txt",numGoblin,dotGoblin);
+    Bee=createBeesFromFile("save_game/Bee1.txt",numBee,dotBee);
     //Load tile map
         if( !setTiles( tiles,1 ) )
         {
@@ -282,12 +290,12 @@ if(level==1){
             success = false;
         }
     }
-else{                                            //// màn chơi mặc định
+else if(level==2){                                            //// màn chơi mặc định
     GetBegin("save_game/Begin2.txt");
     Wolve=createWolvesFromFile("save_game/Wolve2.txt",numWolve,dotWolve);
     Slime=createSlimesFromFile("save_game/Slime2.txt",numSlime,dotSlime);
     Goblin=createGoblinsFromFile("save_game/Goblin2.txt",numGoblin,dotGoblin);
-
+    Bee=createBeesFromFile("save_game/Bee2.txt",numBee,dotBee);
     //Load tile map
         if( !setTiles( tiles,2 ) )
         {
@@ -295,6 +303,32 @@ else{                                            //// màn chơi mặc định
             success = false;
         }
     }
+else if(level==3){                                            //// màn chơi mặc định
+    GetBegin("save_game/Begin2.txt");
+    Wolve=createWolvesFromFile("save_game/Wolve2.txt",numWolve,dotWolve);
+    Slime=createSlimesFromFile("save_game/Slime2.txt",numSlime,dotSlime);
+    Goblin=createGoblinsFromFile("save_game/Goblin2.txt",numGoblin,dotGoblin);
+    Bee=createBeesFromFile("save_game/Bee3.txt",numBee,dotBee);
+    //Load tile map
+        if( !setTiles( tiles,3 ) )
+        {
+            printf( "Failed to load tile set!\n" );
+            success = false;
+        }
+    }
+else{
+    GetBegin("save_game/Begin1.txt");
+    Wolve=createWolvesFromFile("save_game/Wolve1.txt",numWolve,dotWolve);
+    Slime=createSlimesFromFile("save_game/Slime1.txt",numSlime,dotSlime);
+    Goblin=createGoblinsFromFile("save_game/Goblin1.txt",numGoblin,dotGoblin);
+    Bee=createBeesFromFile("save_game/Bee1.txt",numBee,dotBee);
+    //Load tile map
+        if( !setTiles( tiles,1 ) )
+        {
+            printf( "Failed to load tile set!\n" );
+            success = false;
+        }
+}
 return success;
 }
 
@@ -302,8 +336,10 @@ return success;
  void close(Tile* tiles[],bool loadMap,
             slime**& Slime, Dot**& dotSlime, int& numSlime,
             wolve**& Wolve, Dot**& dotWolve, int& numWolve,
-            goblin**& Goblin, Dot**&dotGoblin,int& numGoblin ) {
-    if(loadMap)closeMap(tiles,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve,Goblin,dotGoblin,numGoblin);
+            goblin**& Goblin, Dot**&dotGoblin,int& numGoblin,
+            bee**& Bee, Dot**& dotBee, int& numBee)
+             {
+    if(loadMap)closeMap(tiles,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve,Goblin,dotGoblin,numGoblin,Bee,dotBee,numBee);
     // Giải phóng các tài nguyên khác (như texture, âm thanh)
     gPauseTexture.free();
     gPassTexture.free();
@@ -350,8 +386,9 @@ return success;
  void closeMap(Tile* tiles[],
                slime**& Slime, Dot**& dotSlime, int& numSlime,
                wolve**& Wolve, Dot**& dotWolve, int& numWolve,
-               goblin**& Goblin, Dot**&dotGoblin,int& numGoblin
-               ){
+               goblin**& Goblin, Dot**&dotGoblin,int& numGoblin,
+               bee**& Bee, Dot**& dotBee, int& numBee)
+               {
    // Giải phóng bộ nhớ cho từng Tile trong mảng
 
         for (int i = 0; i < TOTAL_TILES; ++i) {
@@ -364,6 +401,7 @@ return success;
     freeSlimes(Slime, dotSlime, numSlime);
     freeWolves(Wolve, dotWolve, numWolve);
     freeGoblins(Goblin, dotGoblin, numGoblin);
+    freeBees(Bee, dotBee, numBee);
 
  }
 
@@ -530,7 +568,7 @@ void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime) {
     }
 
     // Giải phóng texture static của slime (chỉ cần giải phóng một lần)
-    slime::freeStaticTextures();
+    if(numSlime!=0)slime::freeStaticTextures();
     // Giải phóng mảng chứa các con trỏ slime
     delete[] Slime;
 
@@ -540,6 +578,7 @@ void freeSlimes(slime**& Slime, Dot**& dotSlime, int& numSlime) {
     // Đặt lại số lượng slime
     numSlime = 0;
 }
+
 
 wolve** createWolvesFromFile(const std::string& filename, int& numWolve, Dot**& dotWolve) {
     std::ifstream file(filename);
@@ -582,7 +621,7 @@ void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve) {
     }
 
     // Giải phóng texture static của wolve (chỉ cần giải phóng một lần)
-    wolve::freeStaticTextures();
+    if(numWolve!=0)wolve::freeStaticTextures();
     // Giải phóng mảng chứa các con trỏ wolve
     delete[] Wolve;
 
@@ -592,6 +631,7 @@ void freeWolves(wolve**& Wolve, Dot**& dotWolve, int& numWolve) {
     // Đặt lại số lượng wolve
     numWolve = 0;
 }
+
 
 goblin** createGoblinsFromFile(const std::string& filename, int& numGoblin, Dot**& dotGoblin){
     std::ifstream file(filename);
@@ -627,13 +667,57 @@ void freeGoblins(goblin**& Goblin, Dot**& dotGoblin, int& numGoblin) {
         }
     }
 
-    goblin::freeStaticTextures();
+    if(numGoblin!=0)goblin::freeStaticTextures();
     delete[] Goblin;
     delete[] dotGoblin;
 
     // Đặt lại số lượng wolve
     numGoblin = 0;
 }
+
+bee** createBeesFromFile(const std::string& filename, int& numBee, Dot**& dotBee){
+    std::ifstream file(filename);
+    if (!file) {
+        printf("Không thể mở file!\n");
+        return nullptr;
+    }
+    file >> numBee;
+    bee** Bee = new bee*[numBee];
+    dotBee = new Dot*[numBee];  // Cấp phát mảng Dot* tương ứng
+    int x, y;
+    for (int i = 0; i < numBee; ++i) {
+        file >> x >> y;
+        Bee[i] = new bee(x, y);
+        if (i == 0) Bee[i]->loadMedia();
+        dotBee[i] = Bee[i]->GetDot();
+    }
+
+    // Đóng file
+    file.close();
+
+    return Bee;
+
+}
+
+void freeBees(bee**& Bee, Dot**& dotBee, int& numBee) {
+    //
+    for (int i = 0; i < numBee; ++i) {
+        if (Bee[i] != nullptr) {
+            Bee[i]->free();
+            delete Bee[i];
+            Bee[i] = nullptr;
+        }
+    }
+
+    if(numBee!=0)bee::freeStaticTextures();
+    delete[] Bee;
+    delete[] dotBee;
+
+    // Đặt lại số lượng wolve
+    numBee = 0;
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -676,7 +760,6 @@ void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position ) {
         dotWolve[i]->AiHandleEvent(e, tileSet, position); // Xử lý sự kiện cho từng Wolve
     }
 
-    // Xử lý sự kiện cho tất cả các Slime
     for (int i = 0; i < numSlime; i++) {
         dotSlime[i]->AiHandleEvent(e, tileSet, position); // Xử lý sự kiện cho từng Slime
     }
@@ -684,6 +767,11 @@ void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position ) {
     for (int i = 0; i < numGoblin; i++) {
         dotGoblin[i]->AiHandleEvent(e, tileSet, position);
     }
+
+    for (int i = 0; i < numBee; i++) {
+        dotBee[i]->AiHandleEvent(e, tileSet, position);
+    }
+
 }
 
 void GetBegin(const std::string& filename) {
@@ -815,6 +903,7 @@ int main(int argc, char* args[])
                         gCharacter.attackEnemy(dotWolve, numWolve, 1);
                         gCharacter.attackEnemy(dotSlime, numSlime, 1);
                         gCharacter.attackEnemy(dotGoblin, numGoblin,1);
+                        gCharacter.attackEnemy(dotBee, numBee,1);
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                         for (int i = 0; i < numWolve; i++)
                         {
@@ -855,6 +944,10 @@ int main(int argc, char* args[])
                         {
                             Goblin[i]->render(camera);
                         }
+                        for (int i = 0; i < numBee; i++)
+                        {
+                            Bee[i]->render(camera);
+                        }
 
                         gCharacter.render(camera);
                         handleRain(frameStart);
@@ -880,7 +973,7 @@ int main(int argc, char* args[])
                             //quit = true;
                             if(!inMenu && !gCharacter.isDie())Level++;  // tăng số màn chơi
                             GameStarted=1;
-                            if((GameStarted==1) && isGameLoaded){closeMap(tileSet,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve,Goblin,dotGoblin,numGoblin);isGameLoaded=false;} // nếu quay trở lại menu; xóa màn chơi cũ đi
+                            if((GameStarted==1) && isGameLoaded){closeMap(tileSet,Slime,dotSlime,numSlime,Wolve,dotWolve,numWolve,Goblin,dotGoblin,numGoblin,Bee,dotBee,numBee);isGameLoaded=false;} // nếu quay trở lại menu; xóa màn chơi cũ đi
                             wait_for_quit=false;
                             renderP=0;
                             gPassTexture.setAlpha(0);
@@ -913,7 +1006,8 @@ int main(int argc, char* args[])
             close(tileSet,isGameLoaded,
                   Slime,dotSlime,numSlime,
                   Wolve,dotWolve,numWolve,
-                  Goblin,dotGoblin,numGoblin);
+                  Goblin,dotGoblin,numGoblin,
+                  Bee,dotBee,numBee);
         }
     }
 

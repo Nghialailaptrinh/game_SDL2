@@ -9,7 +9,7 @@
 #include <cmath>
 
 #include "need.h"
-
+///////////////////////////////////////// tạm thời không sử  dụng thứ này do không có nhu cầu cải tiến đồ họa/////////////////////////
 class DataStream
 {
 public:

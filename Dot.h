@@ -78,4 +78,5 @@ private:
 extern Dot** dotSlime;
 extern Dot** dotWolve;
 extern Dot** dotGoblin;
+extern Dot** dotBee;
 #endif // DOT_H_INCLUDED

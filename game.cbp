@@ -31,6 +31,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="Bee.cpp" />
+		<Unit filename="Bee.h" />
 		<Unit filename="Character.cpp" />
 		<Unit filename="Character.h" />
 		<Unit filename="DataStream.cpp" />

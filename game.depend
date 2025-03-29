@@ -7,7 +7,7 @@
 	<SDL.h>
 	<sstream>
 
-1743134875 c:\users\admin\onedrive\desktop\game\dot.h
+1743208984 c:\users\admin\onedrive\desktop\game\dot.h
 	<SDL.h>
 	<utility>
 	<cstdlib>
@@ -25,7 +25,7 @@
 	"constant.h"
 	"need.h"
 
-1743092565 c:\users\admin\onedrive\desktop\game\constant.h
+1743173598 c:\users\admin\onedrive\desktop\game\constant.h
 	<SDL.h>
 	<SDL_mixer.h>
 	<SDL_ttf.h>
@@ -36,7 +36,7 @@
 	<cmath>
 	<utility>
 
-1742883392 c:\users\admin\onedrive\desktop\game\datastream.h
+1743207954 c:\users\admin\onedrive\desktop\game\datastream.h
 	<SDL.h>
 	<SDL_image.h>
 	<string>
@@ -52,7 +52,7 @@
 	"DataStream.h"
 	<cstdio>
 
-1743150604 source:c:\users\admin\onedrive\desktop\game\dot.cpp
+1743208237 source:c:\users\admin\onedrive\desktop\game\dot.cpp
 	"Dot.h"
 	"Character.h"
 	<utility>
@@ -68,7 +68,7 @@
 1742883392 c:\users\admin\onedrive\desktop\game\ltimer.h
 	<SDL.h>
 
-1743149757 source:c:\users\admin\onedrive\desktop\game\main.cpp
+1743218095 source:c:\users\admin\onedrive\desktop\game\main.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -83,6 +83,7 @@
 	"Slime.h"
 	"Wolve.h"
 	"Goblin.h"
+	"Bee.h"
 
 1742954306 c:\users\admin\onedrive\desktop\game\slime.h
 	<SDL.h>
@@ -101,7 +102,7 @@
 1742950459 source:c:\users\admin\onedrive\desktop\game\slime.cpp
 	"Slime.h"
 
-1743149714 source:c:\users\admin\onedrive\desktop\game\tile.cpp
+1743177758 source:c:\users\admin\onedrive\desktop\game\tile.cpp
 	"Tile.h"
 	<SDL.h>
 	<fstream>
@@ -113,6 +114,14 @@
 	"Goblin.h"
 
 1743134808 c:\users\admin\onedrive\desktop\game\goblin.h
+	<SDL.h>
+	<sstream>
+	"Character.h"
+
+1743216795 source:c:\users\admin\onedrive\desktop\game\bee.cpp
+	"Bee.h"
+
+1743207396 c:\users\admin\onedrive\desktop\game\bee.h
 	<SDL.h>
 	<sstream>
 	"Character.h"

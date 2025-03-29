@@ -6,6 +6,7 @@
 Dot** dotSlime=nullptr;
 Dot** dotWolve=nullptr;
 Dot** dotGoblin=nullptr;
+Dot** dotBee=nullptr;
 
 
  Dot::Dot(int x,int y,int typeE)
