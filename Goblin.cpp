@@ -56,6 +56,7 @@ bool goblin::loadMedia()
 void goblin::AiHandleEvent(SDL_Event& e, Tile* tiles[], std::pair<int, int>* position)
 {
     dotGoblin.AiHandleEvent(e, tiles, position);
+
 }
 
 void goblin::render(SDL_Rect& camera)
@@ -91,7 +92,7 @@ void goblin::render(SDL_Rect& camera)
     {
         Frame = 6;
 
-        if (mFrame >= 5.7) { dotGoblin.SetDie(1); printf("Goblin died; %f \n", mFrame); }
+        if (mFrame >= 5.7) { dotGoblin.SetDie(1);  }
 
         int x = (int)mFrame;
         int y = i;

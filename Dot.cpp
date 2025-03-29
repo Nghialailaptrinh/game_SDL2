@@ -207,7 +207,16 @@ void Dot::move( Tile *tiles[], float timeStep )
      mBox.x += X;
 
      //If the dot went too far to the left or right or touched a wall
-     if( ( mBox.x < 0 ) || ( mBox.x + DOT_WIDTH > LEVEL_WIDTH ) || touchesWall( mBox, tiles ) )
+     if(typeEnemy==4){
+            if( ( mBox.x < 0 ) || ( mBox.x + DOT_WIDTH > LEVEL_WIDTH )  ) // không cần check va chạm cho ong vì chúng bay vượt địa hình
+             {
+                 //move back
+                 mBox.x -= X;
+                 touchX=1;
+             }
+     }
+
+     else if( ( mBox.x < 0 ) || ( mBox.x + DOT_WIDTH > LEVEL_WIDTH ) || touchesWall( mBox, tiles ) )
      {
          //move back
          mBox.x -= X;
@@ -220,7 +229,15 @@ void Dot::move( Tile *tiles[], float timeStep )
      mBox.y += Y;
 
      //If the dot went too far up or down or touched a wall
-     if( ( mBox.y < 0 ) || ( mBox.y + DOT_HEIGHT > LEVEL_HEIGHT ) || touchesWall( mBox, tiles ) )
+     if(typeEnemy==4){
+        if( ( mBox.y < 0 ) || ( mBox.y + DOT_HEIGHT > LEVEL_HEIGHT )  )
+         {
+             //move back
+             mBox.y -=Y;
+             touchY=1;
+         }
+     }
+     else if( ( mBox.y < 0 ) || ( mBox.y + DOT_HEIGHT > LEVEL_HEIGHT ) || touchesWall( mBox, tiles ) )
      {
          //move back
          mBox.y -=Y;
@@ -232,7 +249,29 @@ void Dot::move( Tile *tiles[], float timeStep )
     if(mHP<=0)dead=1;
  }
 
+
+
 bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inThisFrame) {      // hàm này sẽ trừ máu kẻ địch; định sự đau và cuồng nộ
+    ///////////////////////////////
+    ///////////////////////////////
+    if(timePois>0){
+            timePois-=1;
+            if(timePois%100==0)mHP -= 1;
+            if(mHP<0)mHP=0;
+    }
+    //////////////////////////////////
+    if(timePois%500==0){
+    mana++;                     // bản thân mana sẽ tăng dần
+    if(run){mana-=1;}          // kĩ năng thì tiêu tốn mana
+    if(run && (timePois>0))timePois-=1;  // giảm thời gian bị độc
+
+
+    if(mana>maxMana)mana=maxMana;
+    if(mana<0)mana=0;
+    if(mana==0)run=0;
+    }
+    ////////////////////////////////
+    ///////////////////////////////
     bool damage=0;
         if (isAttacking() && inThisFrame) {
             for (int i = 0; i < numEnemies; ++i) {
@@ -246,12 +285,17 @@ bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
                             damage =1; // đánh trúng
                     int newHP = dotEnemy[i]->GetHP() - dameSword;
                     dotEnemy[i]->SetHP((newHP>0)?newHP:0);
+
                     dotEnemy[i]->SetHurt(1);
                     dotEnemy[i]->SetTimeHurt(5000);
-                    if(typeEnemy==0){mHP+=(dameSword*0.25);if(mHP>maxHP)mHP=maxHP;}       // chỉ số hút máu cơ bản
+                    if(typeEnemy==0){if(timePois==0) {mHP+=(dameSword*0.25); } // chỉ số hút máu cơ bản
+                                     else{mHP+=(dameSword*0.125);}    // trúng độc thì giảm hồi máu
+                                            if(mHP>maxHP)mHP=maxHP;}
                     else if(dotEnemy[i]->typeEnemy==2)dotEnemy[i]->setVel(200);     // sói chuyển sang trái thái thần tốc;
                     else if(dotEnemy[i]->typeEnemy==3)dotEnemy[i]->SetDameSword(50);       // goblin chuyển sang trạng thái cuồng bạo;
                     else{}
+
+                    if(typeEnemy==4)dotEnemy[i]->SetTimePois(5000);
                     }
                 }
             }

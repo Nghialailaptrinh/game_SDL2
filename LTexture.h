@@ -69,4 +69,6 @@ private:
  extern LTexture texture2;
  extern LTexture texture3;
  extern LTexture texture4;
+ extern LTexture HandBook1Texture;
+ extern LTexture HandBook2Texture;
 #endif // LTEXTURE_H_INCLUDED

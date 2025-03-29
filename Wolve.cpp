@@ -90,7 +90,7 @@ void wolve::render(SDL_Rect& camera)
     {
         Frame = 6;
 
-        if (mFrame >= 5.7) { dotWolve.SetDie(1); printf("Wolve died; %f \n", mFrame); }
+        if (mFrame >= 5.7) { dotWolve.SetDie(1);  }
 
         int x = (int)mFrame;
         int y = i;

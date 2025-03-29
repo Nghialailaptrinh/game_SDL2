@@ -17,6 +17,8 @@
  LTexture texture2;
  LTexture texture3;
  LTexture texture4;
+ LTexture HandBook1Texture;
+ LTexture HandBook2Texture;
 
 
 LTexture::LTexture()

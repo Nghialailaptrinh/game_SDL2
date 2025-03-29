@@ -84,7 +84,6 @@ void slime::render(SDL_Rect& camera)
         if (mFrame >= 5.8)
         {
             dotSlime.SetDie(1);
-            printf("Slime died; %f \n", mFrame);
         }
         int x = (int)mFrame;
         int y = 0;

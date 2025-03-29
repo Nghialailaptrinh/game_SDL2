@@ -43,9 +43,12 @@ public:
     void SetY (int Y) {mBox.y=Y;}              // demo kĩ năng dịch chuyển
     void SetHP(int HP) { mHP = HP; }
     void SetMaxHP(int MaxHP) { maxHP = MaxHP; }
+    void SetMana(int Mana){mana=Mana;}
+    void SetMaxMana(int MaxMana){maxMana=MaxMana;}
     void SetDameSword(int dame) { dameSword = dame; }
     void SetHurt(bool Hurt) { hurt = Hurt; }
     void SetTimeHurt(int TimeHurt) { timeHurt = TimeHurt; }
+    void SetTimePois(int TimePois){timePois=TimePois;}
 
     bool isRight() { return goRight; }
     bool isLeft() { return goLeft; }
@@ -58,7 +61,7 @@ public:
     bool isDie() { return die; }
     bool isAttack() { return attack; }
     bool isAttacking() { return attacking; }
-
+    bool isPois(){return (timePois >0);}
     int typeEnemy;
 
 private:
@@ -72,7 +75,10 @@ private:
     bool touchX,touchY;
     bool hurt;
     int timeHurt;
+    int timePois=0;
     int mHP, maxHP, dameSword;
+    int mana=0,maxMana=0;
+
 };
 
 extern Dot** dotSlime;

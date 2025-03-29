@@ -84,7 +84,7 @@ void bee::render(SDL_Rect& camera)
     {
         Frame = 6;
 
-        if (mFrame >= 5.7) { dotBee.SetDie(1); printf("Bee died; %f \n", mFrame); }
+        if (mFrame >= 5.7) { dotBee.SetDie(1);  }
 
         int x = (int)mFrame;
         int y = i;
