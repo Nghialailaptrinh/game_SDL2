@@ -208,6 +208,7 @@
         success = false;
     }
 
+
  	//Open the font
 	gFont = TTF_OpenFont( "font/VNLUCIDA.TTF", 12 );
 	if( gFont == NULL )
@@ -215,6 +216,10 @@
 		printf( "Failed to load lazy font! SDL_ttf Error: %s\n", TTF_GetError() );
 		success = false;
 	}
+	if (!Q.loadFromRenderedText("Press Q to view the instructions, press X at the top right corner of the screen to pause or exit the game.",nameColor)) {
+        printf("Failed to load Q !\n");
+        success = false;
+    }
 
  	if( !gPauseTexture.loadFromFile( "image/Game_Pause.png" ) )
  	{
@@ -372,6 +377,8 @@ return success;
 
     HandBook1Texture.free();
     HandBook2Texture.free();
+
+    Q.free();
 
     // Giải phóng bộ nhớ cho các đối tượng khác như gTileTexture, gFont, v.v.
     for (int i = 0; i < TOTAL_TILE_SPRITES; ++i) {
@@ -764,7 +771,6 @@ void saveLevel(const int& Level) {
 
 // Hàm xử lý mưa
 void handleRain(Uint32 &frameStart) {
-    static bool isRaining = false;  // Biến theo dõi trạng thái mưa
     static float frameRain = 0;
 
         // Tạo hiệu ứng mưa to dần, nhỏ dần
@@ -1056,7 +1062,8 @@ int main(int argc, char* args[])
                         {
                             gPauseTexture.render(0, 0);
                         }
-                        renderQ();
+                        if(handbook==0)Q.render(200,500-Q.getHeight()-10);
+                        else renderQ();
                     }
                 }
 /////////////////////////////////////////////////////////////////////////////////////////////

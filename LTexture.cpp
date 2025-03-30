@@ -19,6 +19,7 @@
  LTexture texture4;
  LTexture HandBook1Texture;
  LTexture HandBook2Texture;
+ LTexture Q;
 
 
 LTexture::LTexture()
