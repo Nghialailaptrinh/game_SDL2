@@ -256,6 +256,7 @@ bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
     ///////////////////////////////
     if(timePois>0){
             timePois-=1;
+            if(run && (timePois>0) &&(timePois%200==0))mHP += 1;  // giảm hiệu lực trừ máu của kẻ địch bằng việc cộng thêm máu
             if(timePois%100==0)mHP -= 1;
             if(mHP<0)mHP=0;
     }
@@ -264,14 +265,15 @@ bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
     if(typeEnemy==0){
         timeMana+=1;
         if(timeMana%100==0){
-            mana++;                     // bản thân mana sẽ tăng dần
+            mana++;                    // bản thân mana sẽ tăng dần
             if(run){mana-=2;}          // kĩ năng thì tiêu tốn mana
-            if(run && (timePois>0))timePois-=1;  // giảm thời gian bị độc
             if(typeEnemy==0){printf("%d\n",mana);}
             if(mana>maxMana)mana=maxMana;
             if(mana<0)mana=0;
             if(mana==0)run=0;
         }
+        if(timeMana%500==0)mHP+=1;            // bản thân máu cũng sẽ hồi mỗi giây
+        if(mHP>maxHP)mHP=maxHP;
         if(timeMana>10000)timeMana=0;
     }
     ////////////////////////////////
