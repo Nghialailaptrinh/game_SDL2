@@ -260,15 +260,19 @@ bool Dot::attackEnemy(Dot* dotEnemy[], int numEnemies, int attackRange,bool inTh
             if(mHP<0)mHP=0;
     }
     //////////////////////////////////
-    if(timePois%500==0){
-    mana++;                     // bản thân mana sẽ tăng dần
-    if(run){mana-=1;}          // kĩ năng thì tiêu tốn mana
-    if(run && (timePois>0))timePois-=1;  // giảm thời gian bị độc
-
-
-    if(mana>maxMana)mana=maxMana;
-    if(mana<0)mana=0;
-    if(mana==0)run=0;
+    static int timeMana=0;
+    if(typeEnemy==0){
+        timeMana+=1;
+        if(timeMana%100==0){
+            mana++;                     // bản thân mana sẽ tăng dần
+            if(run){mana-=2;}          // kĩ năng thì tiêu tốn mana
+            if(run && (timePois>0))timePois-=1;  // giảm thời gian bị độc
+            if(typeEnemy==0){printf("%d\n",mana);}
+            if(mana>maxMana)mana=maxMana;
+            if(mana<0)mana=0;
+            if(mana==0)run=0;
+        }
+        if(timeMana>10000)timeMana=0;
     }
     ////////////////////////////////
     ///////////////////////////////

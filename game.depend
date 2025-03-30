@@ -1,13 +1,13 @@
 # depslib dependency file v1.0
-1743264291 source:c:\users\admin\onedrive\desktop\game\character.cpp
+1743297150 source:c:\users\admin\onedrive\desktop\game\character.cpp
 	"Character.h"
 
-1742998729 c:\users\admin\onedrive\desktop\game\character.h
+1743296748 c:\users\admin\onedrive\desktop\game\character.h
 	"Dot.h"
 	<SDL.h>
 	<sstream>
 
-1743264226 c:\users\admin\onedrive\desktop\game\dot.h
+1743295910 c:\users\admin\onedrive\desktop\game\dot.h
 	<SDL.h>
 	<utility>
 	<cstdlib>
@@ -17,7 +17,7 @@
 	<SDL.h>
 	"LTexture.h"
 
-1743260010 c:\users\admin\onedrive\desktop\game\ltexture.h
+1743295640 c:\users\admin\onedrive\desktop\game\ltexture.h
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>
@@ -25,7 +25,7 @@
 	"constant.h"
 	"need.h"
 
-1743266276 c:\users\admin\onedrive\desktop\game\constant.h
+1743267874 c:\users\admin\onedrive\desktop\game\constant.h
 	<SDL.h>
 	<SDL_mixer.h>
 	<SDL_ttf.h>
@@ -45,14 +45,14 @@
 	<cmath>
 	"need.h"
 
-1742982140 source:c:\users\admin\onedrive\desktop\game\constant.cpp
+1743298614 source:c:\users\admin\onedrive\desktop\game\constant.cpp
 	"constant.h"
 
 1742997537 source:c:\users\admin\onedrive\desktop\game\datastream.cpp
 	"DataStream.h"
 	<cstdio>
 
-1743264979 source:c:\users\admin\onedrive\desktop\game\dot.cpp
+1743298321 source:c:\users\admin\onedrive\desktop\game\dot.cpp
 	"Dot.h"
 	"Character.h"
 	<utility>
@@ -68,7 +68,7 @@
 1742883392 c:\users\admin\onedrive\desktop\game\ltimer.h
 	<SDL.h>
 
-1743265947 source:c:\users\admin\onedrive\desktop\game\main.cpp
+1743267885 source:c:\users\admin\onedrive\desktop\game\main.cpp
 	<SDL.h>
 	<SDL_image.h>
 	<SDL_ttf.h>

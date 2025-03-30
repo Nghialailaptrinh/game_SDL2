@@ -278,12 +278,6 @@
 		printf( "Failed to load run music! SDL_mixer Error: %s\n", Mix_GetError() );
 		success = false;
 	}
-	gRain = Mix_LoadWAV( "audio/rain.mp3" );
-    if( gRain == NULL )
-	{
-		printf( "Failed to load rain music! SDL_mixer Error: %s\n", Mix_GetError() );
-		success = false;
-	}
 	gSword = Mix_LoadWAV( "audio/sword_attack.mp3" );
 	if( gSword == NULL )
 	{
@@ -395,10 +389,8 @@ return success;
     gSword = nullptr;
     Mix_FreeMusic(gRun);
     Mix_FreeMusic(gGo);
-    Mix_FreeChunk(gRain);
     gRun = nullptr;
     gGo = nullptr;
-    gRain = nullptr;
 
     // Quit SDL subsystems
     Mix_Quit();
@@ -775,32 +767,18 @@ void handleRain(Uint32 &frameStart) {
     static bool isRaining = false;  // Biến theo dõi trạng thái mưa
     static float frameRain = 0;
 
-    // Kiểm tra nếu đang trong thời gian mưa
-    if ((frameStart / 40000) % 2) {
-        if (!isRaining) {  // Nếu nhạc mưa chưa được phát
-            if (((frameStart / 200) % 100) > 20) {
-                Mix_PlayChannel(1, gRain, -1);  // Phát nhạc mưa (lặp vô hạn)
-                isRaining = true;  // Đánh dấu là đang mưa
-            }
-        }
-
         // Tạo hiệu ứng mưa to dần, nhỏ dần
         if ((frameStart / 20000) % 2 == 0) {
             gRainTexture.setAlpha((frameStart / 200) % 100);  //  mưa to dần
         } else {
             gRainTexture.setAlpha(100 - (frameStart / 200) % 100);  // Mưa nhỏ dần
-            // Dừng nhạc mưa khi mưa nhỏ dần (dưới 40)
-            if ((100 - (frameStart / 200) % 100) < 40) {
-                Mix_HaltChannel(1);  // Dừng nhạc mưa
-                isRaining = false;  // Đánh dấu là mưa đã kết thúc
-            }
         }
 
         // Tạo hiệu ứng mưa
         frameRain = fmod((frameRain + 0.1), 4);
         SDL_Rect clip = {0, (int)frameRain * 100, 800, 500};
         gRainTexture.render(0, 0, &clip);
-    }
+
 }
 
 void AiHandle(SDL_Event& e, Tile* tileSet[],std:: pair<int,int>* position ) {

@@ -44,12 +44,15 @@ private:
     LTexture mName;
     LTexture HP;
     LTexture HPTexture;
+    LTexture Mana;
+    LTexture ManaTexture;
     LTexture gStreamingGo;
     LTexture gStreamingStand;
     LTexture gStreamingRun;
     LTexture gStreamingDie;
     LTexture gStreamingAttack;
     LTexture gHurt;
+
 
 };
 

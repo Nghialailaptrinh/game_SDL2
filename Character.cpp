@@ -38,6 +38,20 @@ bool Character::loadMedia()
         success = false;
     }
 
+    std::stringstream path2;
+    path2 << (dotCharacter.GetMana()) << "/" << dotCharacter.GetMaxMana();
+    if (!Mana.loadFromRenderedText(path2.str(), HPColor))
+    {
+        printf("Failed to create Mana texture!\n");
+        success = false;
+    }
+
+    if (!ManaTexture.loadFromFile("image/character/mana.png"))
+    {
+        printf("Failed to create ManaTexture texture!\n");
+        success = false;
+    }
+
     if (!gHurt.loadFromFile("image/character/Sword_Hurt_full.png"))
     {
         printf("Failed to create Hurt texture!\n");
@@ -81,10 +95,9 @@ void Character::handleEvent(SDL_Event& e)
 
 bool Character::attackEnemy(Dot* dotEnemy[], int numEnemies, int weapon)  // demo weapon 1 laf kiến; mỗi vũ khí có tầm đánh và sát thương khác nhau
 {     if(weapon==1){dotCharacter.SetDameSword(dotCharacter.GetDameSword());}   //  kiếm là loại có sát thương cơ bản nhất
-
     int attackRange ;if(weapon==1)attackRange =50;
     if (mFrame >= 2.85 && mFrame <= 3.05&& isAttacking())
-        Mix_PlayChannel(-1, gSword, 0);
+    Mix_PlayChannel(-1, gSword, 0);
     return dotCharacter.attackEnemy(dotEnemy, numEnemies, attackRange, mFrame >= 4.85 && mFrame <= 5.05 && isAttacking());
 }
 
@@ -98,6 +111,15 @@ void Character::move(Tile* tiles[], float timeStep)
     {
         printf("Failed to create HP texture!\n");
     }
+
+    std::stringstream path2;
+    path2 << (dotCharacter.GetMana()) << "/" << dotCharacter.GetMaxMana();
+    if (!Mana.loadFromRenderedText(path2.str(), HPColor))
+    {
+        printf("Failed to create Mana texture!\n");
+    }
+
+
 
     static bool isRunMusicPlaying = false;
     if (dotCharacter.isRun() && dotCharacter.isWalk()) {
@@ -154,14 +176,36 @@ void Character::render(SDL_Rect& camera)
     SDL_Rect Clip = { 0, hp * 10, 80, 10 };
 
     HPTexture.render(X + 40 - HPTexture.getWidth() / 2, Y + 15, &Clip);
+    //////////////////////////////////////////////////////////
+    Mana.render(35,12);
 
+    int mana=dotCharacter.GetMana();
+    int maxMana=dotCharacter.GetMaxMana();
+    int mn;
+    if(mana==0)mn=0;
+    else if (mana <= maxMana * 1.0 / 10) mn = 1;
+    else if (mana <= maxMana * 2 * 1.0 / 10) mn = 2;
+    else if (mana <= maxMana * 3 * 1.0 / 10) mn = 3;
+    else if (mana <= maxMana * 4 * 1.0 / 10) mn = 4;
+    else if (mana <= maxMana * 5 * 1.0 / 10) mn = 5;
+    else if (mana <= maxMana * 6 * 1.0 / 10) mn = 6;
+    else if (mana <= maxMana * 7 * 1.0 / 10) mn = 7;
+    else if (mana <= maxMana * 8 * 1.0 / 10) mn = 8;
+    else if (mana <= maxMana * 9 * 1.0 / 10) mn = 9;
+    else if (mana <= maxMana * 10 * 1.0 / 10) mn = 10;
+
+     Clip = { 0, mn * 40, 400, 40 };
+
+    ManaTexture.render(100, 0, &Clip);
+
+/////////////////////////////////////////////////////////////////////
     int i;
     if (dotCharacter.isRight()) i = 2;
     else if (dotCharacter.isLeft()) i = 1;
     else if (dotCharacter.isUp()) i = 3;
     else i = 0;
 
-
+//////////////////////////////////////////////////////////////////////
     if (isDead()) {
         Frame = 16;
 
@@ -242,6 +286,8 @@ void Character::free()
     mName.free();
     HP.free();
     HPTexture.free();
+    Mana.free();
+    ManaTexture.free();
     gStreamingGo.free();
     gStreamingStand.free();
     gStreamingRun.free();

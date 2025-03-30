@@ -47,7 +47,6 @@ extern SDL_Color eHPColor ;
 
 extern Mix_Music* gRun ;       // Âm nhạc chạy
 extern Mix_Music* gGo ;        // Âm nhạc đi bộ
-extern Mix_Chunk *gRain ;
 extern Mix_Chunk* gSword ;     // Âm thanh vũ khí
 
 // The window we'll be rendering to
