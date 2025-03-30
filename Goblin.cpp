@@ -140,5 +140,5 @@ void goblin::free()
 }
 
 bool goblin::attackEnemy(){
-return dotGoblin.attackEnemy(dotCharacter0,1,25,mFrame>=3.8 && mFrame<=3.95);
+return dotGoblin.attackEnemy(dotCharacter0,1,30,mFrame>=3.8 && mFrame<=3.95);
 }

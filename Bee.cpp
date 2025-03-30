@@ -131,5 +131,5 @@ void bee::free()
 }
 
 bool bee::attackEnemy(){
-return dotBee.attackEnemy(dotCharacter0,1,25,mFrame>=3.8 && mFrame<=3.95);
+return dotBee.attackEnemy(dotCharacter0,1,40,mFrame>=3.8 && mFrame<=3.95);
 }
